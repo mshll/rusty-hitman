@@ -1,0 +1,69 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Rusty Hitman</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: black;
+      }
+
+      #glcanvas {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 1280px;
+        height: 720px;
+        margin: auto;
+      }
+
+      #error-message {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        width: 90%;
+        height: 50px;
+        color: white;
+        text-align: center;
+        display: none;
+        font-family: sans-serif;
+        line-height: 2rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="glcanvas" tabindex="1"></canvas>
+    <div id="error-message">A screen size of 1280x720 or more is required to play this game.</div>
+    <!-- Minified and statically hosted version of https://github.com/not-fl3/miniquad/blob/master/native/sapp-wasm/js/gl.js -->
+    <script src="https://not-fl3.github.io/miniquad-samples/gl.js"></script>
+    <script>
+      function checkScreenSize() {
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        if (screenWidth < 1280 || screenHeight < 720) {
+          document.getElementById('glcanvas').style.display = 'none';
+          document.getElementById('error-message').style.display = 'block';
+        } else {
+          document.getElementById('glcanvas').style.display = 'block';
+          document.getElementById('error-message').style.display = 'none';
+          load('target/wasm32-unknown-unknown/debug/rusty-hitman.wasm'); // Load compiled WASM file
+        }
+      }
+
+      checkScreenSize();
+      window.addEventListener('resize', checkScreenSize);
+    </script>
+  </body>
+</html>
