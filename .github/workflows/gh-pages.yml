@@ -12,7 +12,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v3
 
-      - name: Generate your content
+      - name: Prepare assets
         run: cp -R assets/ public/
 
       - name: Publish current workdir to GitHub Pages
