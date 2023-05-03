@@ -1,3 +1,3 @@
 [alias]
-b = "build --target=wasm32-unknown-unknown"                                       # build wasm
-bn = "build --target=wasm32-unknown-unknown --out-dir=public -Z unstable-options" # [REQUIRES NIGHTLY] build wasm and copy artifact to public folder
+bwasm = "build --target=wasm32-unknown-unknown"                                       # build wasm
+bwasmn = "build --target=wasm32-unknown-unknown --out-dir=public -Z unstable-options" # [REQUIRES NIGHTLY] build wasm and put final artifact in public folder
