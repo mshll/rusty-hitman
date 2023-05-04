@@ -127,7 +127,7 @@ fn gen_crowd(num: usize, atlas: &TextureAtlas) -> Level {
 
         // Generate a random character
         loop {
-            let char_rand: [usize; 5] = [
+            let char_rand: [usize; CHAR_PARTS_COUNT] = [
                 gen_range(0, ARMS_COUNT - 1),
                 gen_range(0, BODY_COUNT - 1),
                 gen_range(0, FACE_COUNT - 1),
@@ -175,6 +175,59 @@ fn gen_crowd(num: usize, atlas: &TextureAtlas) -> Level {
     level
 }
 
+#[allow(unused)]
+/// Draws an outline around the target character.
+fn draw_target_outline(crowd: &[Character]) {
+    for character in crowd.iter() {
+        if character.target {
+            draw_rectangle_lines(character.x, character.y, CHAR_WIDTH, CHAR_HEIGHT, 5.0, RED);
+        }
+    }
+}
+
+/// Draws the hints for the target character.
+fn draw_hints(level: &Level, atlas: &TextureAtlas) {
+    let (x, y) = (100.0, screen_height() / 2.0 - GROUND_HEIGHT / 2.0);
+    let mut hints_color = BLUE;
+
+    for i in 0..3 {
+        let texture = match level.unique_traits_indices[i] {
+            0 => atlas.char_arms[level.target_traits[0]],
+            1 => atlas.char_body[level.target_traits[1]],
+            2 => atlas.char_face[level.target_traits[2]],
+            3 => atlas.char_hat[level.target_traits[3]],
+            4 => atlas.char_legs[level.target_traits[4]],
+            _ => panic!("Invalid trait index!"), // TODO: Remove and use Result instead?
+        };
+
+        if level.unique_traits_indices[i] == 2 || level.unique_traits_indices[i] == 3 {
+            hints_color = WHITE;
+        }
+
+        let padding = 120.0;
+        draw_rectangle(
+            x,
+            y + i as f32 * padding,
+            CHAR_WIDTH + padding / 4.0,
+            CHAR_HEIGHT + padding / 4.0,
+            DARKGRAY,
+        );
+        draw_texture_ex(
+            texture,
+            x,
+            y + i as f32 * padding,
+            hints_color,
+            DrawTextureParams {
+                dest_size: Some(vec2(
+                    CHAR_WIDTH + padding / 4.0,
+                    CHAR_HEIGHT + padding / 4.0,
+                )),
+                ..Default::default()
+            },
+        );
+    }
+}
+
 /// Handles input from the user.
 /// * Checks if the user clicked on a character.
 fn handle_input(crowd: &mut [Character]) {
@@ -202,7 +255,7 @@ fn handle_input(crowd: &mut [Character]) {
 }
 
 /// Draws a crosshair cursor at the mouse position.
-fn draw_cursor(cursor_texture: Texture2D) {
+pub fn draw_cursor(cursor_texture: Texture2D) {
     let (mouse_x, mouse_y) = mouse_position();
     // Draw the custom cursor at the mouse position
     draw_texture(
@@ -250,6 +303,8 @@ async fn main() {
             },
         );
 
+        // draw_target_outline(&level.crowd);
+
         // Draw the title
         draw_text("Rusty Hitman", 50.0, 70.0, 60.0, LIGHTGRAY);
 
@@ -257,6 +312,8 @@ async fn main() {
         for i in level.crowd.iter_mut() {
             i.draw();
         }
+
+        draw_hints(&level, &atlas);
 
         draw_cursor(atlas.crosshair);
         next_frame().await

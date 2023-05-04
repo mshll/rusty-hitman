@@ -20,7 +20,7 @@ pub struct TextureAtlas {
 }
 
 impl TextureAtlas {
-    /// Loads all game textures and builds the atlas.
+    /// Loads all game textures.
     pub async fn load() -> Result<TextureAtlas, FileError> {
         let mut atlas = TextureAtlas {
             ground: load_texture("ground.png").await?,
