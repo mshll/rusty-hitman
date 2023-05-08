@@ -25,8 +25,11 @@ impl<'a> Level<'a> {
     /// Generates a crowd of `num` characters with unique positions.
     /// The first character in the crowd is the target.
     pub fn gen_crowd(&mut self, num: usize) {
-        let traits_range: Vec<usize> = (0..CHAR_PARTS_COUNT).collect();
-        self.unique_traits_indices = traits_range.choose_multiple(3).copied().collect(); // Choose 3 random unique traits from 4 total traits
+        self.unique_traits_indices = (0..CHAR_PARTS_COUNT)
+            .collect::<Vec<usize>>()
+            .choose_multiple(3)
+            .copied()
+            .collect(); // Choose 3 random traits from `CHAR_PARTS_COUNT` total
 
         let x_min = GAME_WIDTH / 2.5 + 20.0;
         let x_max = GAME_WIDTH / 2.5 + GROUND_WIDTH - 20.0 - CHAR_WIDTH;

@@ -8,6 +8,7 @@ mod atlas;
 mod character;
 mod colors;
 mod level;
+mod renderer;
 use colors::*;
 use macroquad::rand::{gen_range, srand, ChooseRandom};
 use macroquad::{color::Color, prelude::*};
@@ -33,9 +34,9 @@ fn window_conf() -> Conf {
 
 /// Handles input from the user.
 /// * Checks if the user clicked on a character.
-fn handle_input(crowd: &mut [character::Character]) {
+fn handle_input(mouse_pos: (f32, f32), crowd: &mut [character::Character]) {
     if is_mouse_button_pressed(MouseButton::Left) {
-        let (mouse_x, mouse_y) = mouse_position();
+        let (mouse_x, mouse_y) = mouse_pos;
         println!("Mouse clicked at ({}, {})", mouse_x, mouse_y);
 
         // Check if mouse clicked on a character
@@ -75,6 +76,7 @@ async fn main() {
     srand(macroquad::miniquad::date::now() as u64);
     show_mouse(false); // Hide the mouse cursor
 
+    let mut renderer = renderer::Renderer::init(GAME_WIDTH, GAME_HEIGHT);
     let atlas = atlas::TextureAtlas::load().await.unwrap(); // Load the texture atlas
     let mut level = level::Level::init(&atlas);
 
@@ -82,7 +84,9 @@ async fn main() {
 
     loop {
         clear_background(color_u8!(23, 22, 41, 255));
-        handle_input(&mut level.crowd);
+        renderer.set();
+        handle_input(renderer.mouse_position(), &mut level.crowd);
+        clear_background(color_u8!(23, 22, 41, 255));
 
         // Draw the background
         draw_texture_ex(
@@ -116,6 +120,7 @@ async fn main() {
         level.draw_crowd();
 
         level.draw_hints();
+        renderer.draw();
         draw_cursor(atlas.crosshair);
         next_frame().await
     }
