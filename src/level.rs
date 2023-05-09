@@ -1,24 +1,25 @@
 //! Level struct and methods
 
-use crate::atlas::*;
+use crate::asset_bundle::*;
 use crate::character::Character;
 use crate::*;
+use std::rc::Rc;
 
-pub struct Level<'a> {
+pub struct Level {
     pub crowd: Vec<Character>,
     pub target_traits: [usize; CHAR_PARTS_COUNT],
     pub unique_traits_indices: Vec<usize>,
-    pub atlas: &'a TextureAtlas,
+    pub assets: Rc<AssetBundle>,
 }
 
-impl<'a> Level<'a> {
+impl Level {
     /// Initializes a level struct.
-    pub fn init(atlas: &'a TextureAtlas) -> Level<'a> {
+    pub fn init(assets: &Rc<AssetBundle>) -> Level {
         Level {
             crowd: Vec::new(),
             unique_traits_indices: Vec::new(),
             target_traits: [0; CHAR_PARTS_COUNT],
-            atlas,
+            assets: Rc::clone(assets),
         }
     }
 
@@ -30,6 +31,8 @@ impl<'a> Level<'a> {
             .choose_multiple(3)
             .copied()
             .collect(); // Choose 3 random traits from `CHAR_PARTS_COUNT` total
+
+        self.crowd = Vec::new(); // Clear the crowd
 
         let x_min = GAME_WIDTH / 2.5 + 20.0;
         let x_max = GAME_WIDTH / 2.5 + GROUND_WIDTH - 20.0 - CHAR_WIDTH;
@@ -86,11 +89,11 @@ impl<'a> Level<'a> {
                     x,
                     y,
                     [
-                        self.atlas.char_arms[char_rand[0]],
-                        self.atlas.char_body[char_rand[1]],
-                        self.atlas.char_face[char_rand[2]],
-                        self.atlas.char_hat[char_rand[3]],
-                        self.atlas.char_legs[char_rand[4]],
+                        self.assets.char_arms[char_rand[0]],
+                        self.assets.char_body[char_rand[1]],
+                        self.assets.char_face[char_rand[2]],
+                        self.assets.char_hat[char_rand[3]],
+                        self.assets.char_legs[char_rand[4]],
                     ],
                 ));
 
@@ -104,6 +107,20 @@ impl<'a> Level<'a> {
         }
 
         self.crowd[0].is_target = true;
+    }
+
+    /// Draws the ground.
+    pub fn draw_ground(&self) {
+        draw_texture_ex(
+            self.assets.ground,
+            GAME_WIDTH / 2.5,
+            GAME_HEIGHT / 2.0 - GROUND_HEIGHT / 2.0,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(GROUND_WIDTH, GROUND_HEIGHT)),
+                ..Default::default()
+            },
+        );
     }
 
     /// Draws the crowd.
@@ -120,11 +137,11 @@ impl<'a> Level<'a> {
 
         for i in 0..3 {
             let texture = match self.unique_traits_indices[i] {
-                0 => self.atlas.char_arms[self.target_traits[0]],
-                1 => self.atlas.char_body[self.target_traits[1]],
-                2 => self.atlas.char_face[self.target_traits[2]],
-                3 => self.atlas.char_hat[self.target_traits[3]],
-                4 => self.atlas.char_legs[self.target_traits[4]],
+                0 => self.assets.char_arms[self.target_traits[0]],
+                1 => self.assets.char_body[self.target_traits[1]],
+                2 => self.assets.char_face[self.target_traits[2]],
+                3 => self.assets.char_hat[self.target_traits[3]],
+                4 => self.assets.char_legs[self.target_traits[4]],
                 _ => panic!("Invalid trait index!"), // TODO: Remove and use Result instead?
             };
 
@@ -155,6 +172,58 @@ impl<'a> Level<'a> {
                 },
             );
         }
+    }
+
+    /// Checks if the mouse clicked on a character.
+    pub fn check_target_click(&mut self, mouse_pos: (f32, f32)) -> Option<bool> {
+        if is_mouse_button_pressed(MouseButton::Left) {
+            let (mouse_x, mouse_y) = mouse_pos;
+            println!("Mouse clicked at ({}, {})", mouse_x, mouse_y);
+
+            // Check if mouse clicked on a character
+            for character in self.crowd.iter_mut() {
+                if mouse_x >= character.x
+                    && mouse_x <= character.x + CHAR_WIDTH
+                    && mouse_y >= character.y
+                    && mouse_y <= character.y + CHAR_HEIGHT
+                {
+                    if character.is_target {
+                        return Some(true);
+                    } else {
+                        return Some(false);
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    pub fn draw(&mut self, score: u32) {
+        // Draw the ground
+        self.draw_ground();
+
+        // Draw the title
+        draw_text_centered(
+            "Rusty Hitman",
+            GAME_WIDTH / 2.0,
+            50.0,
+            self.assets.font,
+            80,
+            WHITE,
+        );
+
+        // Draw the score
+        draw_text_centered(
+            &format!("Score: {}", score),
+            GAME_WIDTH / 2.0,
+            80.0,
+            self.assets.font,
+            30,
+            WHITE,
+        );
+        self.draw_crowd();
+        self.draw_hints();
+        self.draw_target_outline();
     }
 
     #[allow(unused)]

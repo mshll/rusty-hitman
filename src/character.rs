@@ -24,7 +24,7 @@ impl Character {
 
     /// Draws all parts of the character.
     pub fn draw(&mut self) {
-        for i in 0..atlas::CHAR_PARTS_COUNT {
+        for i in 0..asset_bundle::CHAR_PARTS_COUNT {
             let mut y = self.y;
             let mut color = self.color;
 

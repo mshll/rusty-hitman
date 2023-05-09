@@ -4,14 +4,18 @@
 //! A 2D game where the player has to find and kill the target in a crowd of people before the time runs out.
 //!
 
-mod atlas;
+mod asset_bundle;
 mod character;
 mod colors;
+mod game;
 mod level;
 mod renderer;
+mod text;
 use colors::*;
+use game::*;
 use macroquad::rand::{gen_range, srand, ChooseRandom};
 use macroquad::{color::Color, prelude::*};
+use text::*;
 
 const GAME_WIDTH: f32 = 1280.0;
 const GAME_HEIGHT: f32 = 720.0;
@@ -29,32 +33,6 @@ fn window_conf() -> Conf {
         window_width: GAME_WIDTH as i32,
         window_height: GAME_HEIGHT as i32,
         ..Default::default()
-    }
-}
-
-/// Handles input from the user.
-/// * Checks if the user clicked on a character.
-fn handle_input(mouse_pos: (f32, f32), crowd: &mut [character::Character]) {
-    if is_mouse_button_pressed(MouseButton::Left) {
-        let (mouse_x, mouse_y) = mouse_pos;
-        println!("Mouse clicked at ({}, {})", mouse_x, mouse_y);
-
-        // Check if mouse clicked on a character
-        for character in crowd.iter_mut() {
-            if mouse_x >= character.x
-                && mouse_x <= character.x + CHAR_WIDTH
-                && mouse_y >= character.y
-                && mouse_y <= character.y + CHAR_HEIGHT
-            {
-                // TODO: Implement game logic for clicking on a character
-                if character.is_target {
-                    character.color = BLACK;
-                } else {
-                    character.color = WHITE;
-                }
-                break;
-            }
-        }
     }
 }
 
@@ -76,52 +54,19 @@ async fn main() {
     srand(macroquad::miniquad::date::now() as u64);
     show_mouse(false); // Hide the mouse cursor
 
-    let mut renderer = renderer::Renderer::init(GAME_WIDTH, GAME_HEIGHT);
-    let atlas = atlas::TextureAtlas::load().await.unwrap(); // Load the texture atlas
-    let mut level = level::Level::init(&atlas);
+    let mut game = Game::init().await;
 
-    level.gen_crowd(10);
+    game.level.gen_crowd(10);
 
     loop {
-        clear_background(color_u8!(23, 22, 41, 255));
-        renderer.set();
-        handle_input(renderer.mouse_position(), &mut level.crowd);
-        clear_background(color_u8!(23, 22, 41, 255));
+        clear_background(BLACK);
+        game.renderer.set();
+        clear_background(DARK_BLUE);
 
-        // Draw the background
-        draw_texture_ex(
-            atlas.bg,
-            0.0,
-            0.0,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(vec2(screen_width(), screen_height())),
-                ..Default::default()
-            },
-        );
+        game.update();
 
-        // Draw the ground
-        draw_texture_ex(
-            atlas.ground,
-            GAME_WIDTH / 2.5,
-            GAME_HEIGHT / 2.0 - GROUND_HEIGHT / 2.0,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(vec2(GROUND_WIDTH, GROUND_HEIGHT)),
-                ..Default::default()
-            },
-        );
-
-        level.draw_target_outline();
-
-        // Draw the title
-        draw_text("Rusty Hitman", 50.0, 70.0, 60.0, LIGHTGRAY);
-
-        level.draw_crowd();
-
-        level.draw_hints();
-        renderer.draw();
-        draw_cursor(atlas.crosshair);
+        game.renderer.draw();
+        draw_cursor(game.assets.crosshair);
         next_frame().await
     }
 }

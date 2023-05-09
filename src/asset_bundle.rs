@@ -7,8 +7,8 @@ pub const HAT_COUNT: usize = 7;
 pub const LEGS_COUNT: usize = 6;
 pub const CHAR_PARTS_COUNT: usize = 5;
 
-/// Game textures atlas.
-pub struct TextureAtlas {
+/// Game assets.
+pub struct AssetBundle {
     pub ground: Texture2D,
     pub bg: Texture2D,
     pub crosshair: Texture2D,
@@ -17,12 +17,13 @@ pub struct TextureAtlas {
     pub char_face: [Texture2D; FACE_COUNT],
     pub char_hat: [Texture2D; HAT_COUNT],
     pub char_legs: [Texture2D; LEGS_COUNT],
+    pub font: Font,
 }
 
-impl TextureAtlas {
+impl AssetBundle {
     /// Loads all game textures.
-    pub async fn load() -> Result<TextureAtlas, FileError> {
-        let mut atlas = TextureAtlas {
+    pub async fn load() -> Result<AssetBundle, FileError> {
+        let mut assets = AssetBundle {
             ground: load_texture("ground.png").await?,
             bg: load_texture("bg.png").await?,
             crosshair: load_texture("crosshair.png").await?,
@@ -31,39 +32,44 @@ impl TextureAtlas {
             char_face: [Texture2D::empty(); FACE_COUNT],
             char_hat: [Texture2D::empty(); HAT_COUNT],
             char_legs: [Texture2D::empty(); LEGS_COUNT],
+            font: load_ttf_font("ThaleahFat.ttf").await.unwrap(), // TODO: Handle error properly
         };
 
         // Set textures filters to nearest for better pixel art rendering.
-        atlas.ground.set_filter(FilterMode::Nearest);
-        atlas.bg.set_filter(FilterMode::Nearest);
-        atlas.crosshair.set_filter(FilterMode::Nearest);
+        assets.ground.set_filter(FilterMode::Nearest);
+        assets.bg.set_filter(FilterMode::Nearest);
+        assets.crosshair.set_filter(FilterMode::Nearest);
 
         // Load character textures.
         for i in 0..ARMS_COUNT {
-            atlas.char_arms[i] = load_texture(format!("character/arms-{}.png", i).as_str()).await?;
-            atlas.char_arms[i].set_filter(FilterMode::Nearest);
+            assets.char_arms[i] =
+                load_texture(format!("character/arms-{}.png", i).as_str()).await?;
+            assets.char_arms[i].set_filter(FilterMode::Nearest);
         }
 
         for i in 0..BODY_COUNT {
-            atlas.char_body[i] = load_texture(format!("character/body-{}.png", i).as_str()).await?;
-            atlas.char_body[i].set_filter(FilterMode::Nearest);
+            assets.char_body[i] =
+                load_texture(format!("character/body-{}.png", i).as_str()).await?;
+            assets.char_body[i].set_filter(FilterMode::Nearest);
         }
 
         for i in 0..FACE_COUNT {
-            atlas.char_face[i] = load_texture(format!("character/face-{}.png", i).as_str()).await?;
-            atlas.char_face[i].set_filter(FilterMode::Nearest);
+            assets.char_face[i] =
+                load_texture(format!("character/face-{}.png", i).as_str()).await?;
+            assets.char_face[i].set_filter(FilterMode::Nearest);
         }
 
         for i in 0..HAT_COUNT {
-            atlas.char_hat[i] = load_texture(format!("character/hat-{}.png", i).as_str()).await?;
-            atlas.char_hat[i].set_filter(FilterMode::Nearest);
+            assets.char_hat[i] = load_texture(format!("character/hat-{}.png", i).as_str()).await?;
+            assets.char_hat[i].set_filter(FilterMode::Nearest);
         }
 
         for i in 0..LEGS_COUNT {
-            atlas.char_legs[i] = load_texture(format!("character/legs-{}.png", i).as_str()).await?;
-            atlas.char_legs[i].set_filter(FilterMode::Nearest);
+            assets.char_legs[i] =
+                load_texture(format!("character/legs-{}.png", i).as_str()).await?;
+            assets.char_legs[i].set_filter(FilterMode::Nearest);
         }
 
-        Ok(atlas)
+        Ok(assets)
     }
 }
