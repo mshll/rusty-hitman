@@ -98,7 +98,7 @@ impl Game {
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 2.0,
             self.assets.font,
-            30,
+            32,
             WHITE,
         );
     }
@@ -153,7 +153,7 @@ impl Game {
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 2.0 + 50.0,
             self.assets.font,
-            30,
+            32,
             WHITE,
         );
 

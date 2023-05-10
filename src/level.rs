@@ -26,11 +26,10 @@ impl Level {
     /// Generates a crowd of `num` characters with unique positions.
     /// The first character in the crowd is the target.
     pub fn gen_crowd(&mut self, num: usize) {
-        self.unique_traits_indices = (0..CHAR_PARTS_COUNT)
-            .collect::<Vec<usize>>()
-            .choose_multiple(3)
-            .copied()
-            .collect(); // Choose 3 random traits from `CHAR_PARTS_COUNT` total
+        let mut traits_range: Vec<usize> = (0..CHAR_PARTS_COUNT).collect();
+        traits_range.shuffle(); // Shuffle the traits range
+        self.unique_traits_indices = traits_range[0..3].to_vec(); // Pick the first 3 traits as the unique traits
+        self.unique_traits_indices.sort(); // Sort the unique traits indices
 
         self.crowd = Vec::new(); // Clear the crowd
 
@@ -64,11 +63,11 @@ impl Level {
             // Generate a random character
             loop {
                 let char_rand: [usize; CHAR_PARTS_COUNT] = [
-                    gen_range(0, ARMS_COUNT - 1),
-                    gen_range(0, BODY_COUNT - 1),
-                    gen_range(0, FACE_COUNT - 1),
-                    gen_range(0, HAT_COUNT - 1),
-                    gen_range(0, LEGS_COUNT - 1),
+                    gen_range(0, ARMS_COUNT),
+                    gen_range(0, BODY_COUNT),
+                    gen_range(0, FACE_COUNT),
+                    gen_range(0, HAT_COUNT),
+                    gen_range(0, LEGS_COUNT),
                 ];
 
                 // Make sure no other character has the exact same traits as the target unique traits
@@ -148,6 +147,8 @@ impl Level {
             // Don't colorize the face and hat.
             if self.unique_traits_indices[i] == 2 || self.unique_traits_indices[i] == 3 {
                 hints_color = WHITE;
+            } else {
+                hints_color = BLUE;
             }
 
             let padding = 120.0;
@@ -158,6 +159,8 @@ impl Level {
                 CHAR_HEIGHT + padding / 4.0,
                 DARKGRAY,
             );
+
+            // Draw hint
             draw_texture_ex(
                 texture,
                 x,
