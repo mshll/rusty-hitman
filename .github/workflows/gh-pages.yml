@@ -9,8 +9,16 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+
+      - name: Add wasm32-unknown-unknown target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Cargo build
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Prepare artifact
+        run: cp target/wasm32-unknown-unknown/release/rusty-hitman.wasm public/
 
       - name: Prepare assets
         run: cp -R assets/ public/
