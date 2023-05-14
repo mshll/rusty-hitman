@@ -35,18 +35,6 @@ impl Game {
 
     /// Updates the game state.
     pub fn update(&mut self) {
-        // Draw the background
-        draw_texture_ex(
-            self.assets.bg,
-            0.0,
-            0.0,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(vec2(screen_width(), screen_height())),
-                ..Default::default()
-            },
-        );
-
         // Game state logic
         match self.game_state {
             Menu => {
@@ -84,19 +72,21 @@ impl Game {
 
     /// Draws the game menu.
     fn menu(&self) {
-        draw_text_centered(
-            "Rusty Hitman",
-            GAME_WIDTH / 2.0,
-            GAME_HEIGHT / 2.0 - 100.0,
-            self.assets.font,
-            80,
+        draw_texture_ex(
+            self.assets.logo,
+            GAME_WIDTH / 2.0 - 300.0,
+            GAME_HEIGHT / 2.0 - 200.0,
             WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(595.0, 133.0)),
+                ..Default::default()
+            },
         );
 
         draw_text_centered(
             "Press Enter to start",
             GAME_WIDTH / 2.0,
-            GAME_HEIGHT / 2.0,
+            GAME_HEIGHT / 1.5,
             self.assets.font,
             32,
             WHITE,
@@ -131,13 +121,7 @@ impl Game {
     fn game_over(&mut self) {
         self.level.draw(self.score);
 
-        draw_rectangle(
-            GAME_WIDTH / 2.0 - 300.0,
-            GAME_HEIGHT / 2.0 - 150.0,
-            600.0,
-            300.0,
-            DARK_BLUE,
-        );
+        draw_rectangle(0.0, 0.0, GAME_WIDTH, GAME_HEIGHT, OVERLAY_PURPLE);
 
         draw_text_centered(
             "Game Over",

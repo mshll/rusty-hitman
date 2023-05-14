@@ -4,7 +4,7 @@ pub const ARMS_COUNT: usize = 7;
 pub const BODY_COUNT: usize = 10;
 pub const FACE_COUNT: usize = 10;
 pub const HAT_COUNT: usize = 7;
-pub const LEGS_COUNT: usize = 6;
+pub const LEGS_COUNT: usize = 5;
 pub const CHAR_PARTS_COUNT: usize = 5;
 
 /// Game assets.
@@ -17,6 +17,9 @@ pub struct AssetBundle {
     pub char_face: [Texture2D; FACE_COUNT],
     pub char_hat: [Texture2D; HAT_COUNT],
     pub char_legs: [Texture2D; LEGS_COUNT],
+    pub logo: Texture2D,
+    pub frame: Texture2D,
+    pub frame_long: Texture2D,
     pub font: Font,
 }
 
@@ -32,13 +35,19 @@ impl AssetBundle {
             char_face: [Texture2D::empty(); FACE_COUNT],
             char_hat: [Texture2D::empty(); HAT_COUNT],
             char_legs: [Texture2D::empty(); LEGS_COUNT],
-            font: load_ttf_font("ThaleahFat.ttf").await.unwrap(), // TODO: Handle error properly
+            logo: load_texture("logo.png").await?,
+            frame: load_texture("frame.png").await?,
+            frame_long: load_texture("frame-long.png").await?,
+            font: load_ttf_font("04B03.TTF").await.unwrap(), // TODO: Handle error properly
         };
 
         // Set textures filters to nearest for better pixel art rendering.
         assets.ground.set_filter(FilterMode::Nearest);
         assets.bg.set_filter(FilterMode::Nearest);
         assets.crosshair.set_filter(FilterMode::Nearest);
+        assets.logo.set_filter(FilterMode::Nearest);
+        assets.frame.set_filter(FilterMode::Nearest);
+        assets.frame_long.set_filter(FilterMode::Nearest);
 
         // Load character textures.
         for i in 0..ARMS_COUNT {

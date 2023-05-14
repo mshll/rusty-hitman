@@ -33,10 +33,10 @@ impl Level {
 
         self.crowd = Vec::new(); // Clear the crowd
 
-        let x_min = GAME_WIDTH / 2.5 + 20.0;
-        let x_max = GAME_WIDTH / 2.5 + GROUND_WIDTH - 20.0 - CHAR_WIDTH;
-        let y_min = GAME_HEIGHT / 2.0 - GROUND_HEIGHT / 2.0 + 10.0;
-        let y_max = GAME_HEIGHT / 2.0 - GROUND_HEIGHT / 2.0 + 412.0 - CHAR_HEIGHT;
+        let x_min = GAME_WIDTH - GROUND_WIDTH - 20.0;
+        let x_max = GAME_WIDTH - CHAR_WIDTH - 40.0;
+        let y_min = GAME_HEIGHT - GROUND_HEIGHT - 50.0;
+        let y_max = GAME_HEIGHT - CHAR_HEIGHT - 70.0;
 
         // Generate `num` characters scattered around the level.
         for i in 0..num {
@@ -112,8 +112,8 @@ impl Level {
     pub fn draw_ground(&self) {
         draw_texture_ex(
             self.assets.ground,
-            GAME_WIDTH / 2.5,
-            GAME_HEIGHT / 2.0 - GROUND_HEIGHT / 2.0,
+            GAME_WIDTH - GROUND_WIDTH - 30.0,
+            GAME_HEIGHT - GROUND_HEIGHT - 30.0,
             WHITE,
             DrawTextureParams {
                 dest_size: Some(vec2(GROUND_WIDTH, GROUND_HEIGHT)),
@@ -131,8 +131,60 @@ impl Level {
 
     /// Draws the hints for the target character.
     pub fn draw_hints(&self) {
-        let (x, y) = (100.0, GAME_HEIGHT / 2.0 - GROUND_HEIGHT / 2.0);
-        let mut hints_color = BLUE;
+        let hints_text = ["Arms", "Body", "Face", "Hat", "Legs"];
+        let (x, y) = (50.0, GAME_HEIGHT - GROUND_HEIGHT + 110.0);
+        let size = 108.0;
+        let padding = 10.0;
+        let gap = 20.0;
+        let mut hints_color;
+
+        // Draw frame around hints
+        draw_texture_ex(
+            self.assets.frame_long,
+            30.0,
+            GAME_HEIGHT - GROUND_HEIGHT - 30.0,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(280.0, GROUND_HEIGHT)),
+                ..Default::default()
+            },
+        );
+
+        // Draw objective text
+        let text_size = measure_text("TEXT", Some(self.assets.font), 32, 1.0);
+        draw_text_ex(
+            &format!("Your mission"),
+            x,
+            y - 80.0,
+            TextParams {
+                font: self.assets.font,
+                font_size: 32,
+                color: WHITE,
+                ..Default::default()
+            },
+        );
+        draw_text_ex(
+            &format!("is to find"),
+            x,
+            y - 80.0 + text_size.height + 10.0,
+            TextParams {
+                font: self.assets.font,
+                font_size: 32,
+                color: WHITE,
+                ..Default::default()
+            },
+        );
+        draw_text_ex(
+            &format!("who has..."),
+            x,
+            y - 80.0 + (text_size.height + 10.0) * 2.0,
+            TextParams {
+                font: self.assets.font,
+                font_size: 32,
+                color: WHITE,
+                ..Default::default()
+            },
+        );
 
         for i in 0..3 {
             let texture = match self.unique_traits_indices[i] {
@@ -151,26 +203,39 @@ impl Level {
                 hints_color = BLUE;
             }
 
-            let padding = 120.0;
-            draw_rectangle(
+            // Draw frame
+            draw_texture_ex(
+                self.assets.frame,
                 x,
-                y + i as f32 * padding,
-                CHAR_WIDTH + padding / 4.0,
-                CHAR_HEIGHT + padding / 4.0,
-                DARKGRAY,
+                y + i as f32 * (size + padding + gap),
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(size + padding, size + padding)),
+                    ..Default::default()
+                },
             );
 
             // Draw hint
             draw_texture_ex(
                 texture,
-                x,
-                y + i as f32 * padding,
+                x + padding / 2.0,
+                y + i as f32 * (size + padding + gap) + padding / 2.0,
                 hints_color,
                 DrawTextureParams {
-                    dest_size: Some(vec2(
-                        CHAR_WIDTH + padding / 4.0,
-                        CHAR_HEIGHT + padding / 4.0,
-                    )),
+                    dest_size: Some(vec2(size, size)),
+                    ..Default::default()
+                },
+            );
+
+            // Draw hint description text
+            draw_text_ex(
+                hints_text[self.unique_traits_indices[i]],
+                x + size + padding + 20.0,
+                y + i as f32 * (size + padding + gap) + (size + text_size.height) / 2.0,
+                TextParams {
+                    font: self.assets.font,
+                    font_size: 32,
+                    color: WHITE,
                     ..Default::default()
                 },
             );
@@ -178,6 +243,10 @@ impl Level {
     }
 
     /// Checks if the mouse clicked on a character.
+    ///
+    /// Returns `Some(true)` if the target character was clicked.
+    /// Returns `Some(false)` if a non-target character was clicked.
+    /// Returns `None` if no character was clicked.
     pub fn check_target_click(&mut self, mouse_pos: (f32, f32)) -> Option<bool> {
         if is_mouse_button_pressed(MouseButton::Left) {
             let (mouse_x, mouse_y) = mouse_pos;
@@ -205,24 +274,17 @@ impl Level {
         // Draw the ground
         self.draw_ground();
 
-        // Draw the title
-        draw_text_centered(
-            "Rusty Hitman",
-            GAME_WIDTH / 2.0,
-            50.0,
-            self.assets.font,
-            80,
-            WHITE,
-        );
-
         // Draw the score
-        draw_text_centered(
+        draw_text_ex(
             &format!("Score: {}", score),
-            GAME_WIDTH / 2.0,
-            80.0,
-            self.assets.font,
-            30,
-            WHITE,
+            30.0,
+            110.0,
+            TextParams {
+                font: self.assets.font,
+                font_size: 32,
+                color: WHITE,
+                ..Default::default()
+            },
         );
         self.draw_crowd();
         self.draw_hints();

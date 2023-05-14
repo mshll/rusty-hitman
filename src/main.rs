@@ -19,10 +19,10 @@ use text::*;
 
 const GAME_WIDTH: f32 = 1280.0;
 const GAME_HEIGHT: f32 = 720.0;
-const CHAR_WIDTH: f32 = 72.0;
-const CHAR_HEIGHT: f32 = 72.0;
-const GROUND_HEIGHT: f32 = 512.0;
-const GROUND_WIDTH: f32 = 704.0;
+const CHAR_WIDTH: f32 = 96.0;
+const CHAR_HEIGHT: f32 = 96.0;
+const GROUND_WIDTH: f32 = 924.0; // Orig: 308
+const GROUND_HEIGHT: f32 = 564.0; // Orig: 188
 
 /// Game window configuration.
 fn window_conf() -> Conf {
@@ -37,14 +37,18 @@ fn window_conf() -> Conf {
 }
 
 /// Draws a crosshair cursor at the mouse position.
-pub fn draw_cursor(cursor_texture: Texture2D) {
+pub fn draw_cursor(cursor_texture: Texture2D, width: f32, height: f32) {
     let (mouse_x, mouse_y) = mouse_position();
     // Draw the custom cursor at the mouse position
-    draw_texture(
+    draw_texture_ex(
         cursor_texture,
-        mouse_x - cursor_texture.width() / 2.0,
-        mouse_y - cursor_texture.height() / 2.0,
+        mouse_x - width / 2.0,
+        mouse_y - height / 2.0,
         WHITE,
+        DrawTextureParams {
+            dest_size: Some(Vec2::new(width, height)),
+            ..Default::default()
+        },
     );
 }
 
@@ -61,12 +65,12 @@ async fn main() {
     loop {
         clear_background(BLACK);
         game.renderer.set();
-        clear_background(DARK_BLUE);
+        clear_background(BG_PURPLE);
 
         game.update();
 
         game.renderer.draw();
-        draw_cursor(game.assets.crosshair);
+        draw_cursor(game.assets.crosshair, 128.0, 128.0);
         next_frame().await
     }
 }
