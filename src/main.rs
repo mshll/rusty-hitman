@@ -8,6 +8,7 @@ mod asset_bundle;
 mod character;
 mod colors;
 mod game;
+mod game_states;
 mod level;
 mod renderer;
 mod text;
@@ -19,10 +20,12 @@ use text::*;
 
 const GAME_WIDTH: f32 = 1280.0;
 const GAME_HEIGHT: f32 = 720.0;
-const CHAR_WIDTH: f32 = 96.0;
-const CHAR_HEIGHT: f32 = 96.0;
-const GROUND_WIDTH: f32 = 924.0; // Orig: 308
-const GROUND_HEIGHT: f32 = 564.0; // Orig: 188
+const CHAR_WIDTH: f32 = 120.0;
+const CHAR_HEIGHT: f32 = 120.0;
+const GROUND_WIDTH: f32 = 867.0;
+const GROUND_HEIGHT: f32 = 564.0;
+const SPAWN_DELAY: f32 = 0.25;
+const LEVEL_TIME: f32 = 10.0;
 
 /// Game window configuration.
 fn window_conf() -> Conf {
@@ -60,10 +63,8 @@ async fn main() {
 
     let mut game = Game::init().await;
 
-    game.level.gen_crowd(10);
-
     loop {
-        clear_background(BLACK);
+        clear_background(BG_PURPLE);
         game.renderer.set();
         clear_background(BG_PURPLE);
 

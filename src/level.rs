@@ -5,11 +5,30 @@ use crate::character::Character;
 use crate::*;
 use std::rc::Rc;
 
+const BAR_BG_WIDTH: f32 = GROUND_WIDTH;
+const BAR_WIDTH: f32 = GROUND_WIDTH - 8.0;
+const BAR_HEIGHT: f32 = 20.0;
+const BAR_OFFSET: f32 = 4.0;
+
 pub struct Level {
+    /// The crowd of characters in the level.
     pub crowd: Vec<Character>,
+    /// The target character's traits.
     pub target_traits: [usize; CHAR_PARTS_COUNT],
+    /// The indices of the target character's unique traits.
     pub unique_traits_indices: Vec<usize>,
+    /// The assets bundle.
     pub assets: Rc<AssetBundle>,
+    /// The color to draw the hints in.
+    pub hints_color: Color,
+    /// The timer of the level.
+    pub timer: f32,
+    /// Whether the timer should be running.
+    pub timer_on: bool,
+    /// The delay between spawning characters.
+    pub spawn_timer: f32,
+    /// Iterator of the crowd used for spawning characters with the delay.
+    crowd_iter: usize,
 }
 
 impl Level {
@@ -20,23 +39,66 @@ impl Level {
             unique_traits_indices: Vec::new(),
             target_traits: [0; CHAR_PARTS_COUNT],
             assets: Rc::clone(assets),
+            hints_color: rand_color(),
+            timer: LEVEL_TIME,
+            timer_on: false,
+            spawn_timer: SPAWN_DELAY,
+            crowd_iter: 0,
         }
     }
 
-    /// Generates a crowd of `num` characters with unique positions.
+    /// Draws the level.
+    ///
+    /// Returns `true` if the timer is up. Returns `false` otherwise.
+    pub fn draw(&mut self, score: [f32; 2]) -> bool {
+        // Draw the ground
+        self.draw_ground();
+
+        // Draw the score (targets eliminated)
+        draw_text_ex(
+            &format!("Target: {:.0}", score[0]),
+            65.0,
+            70.0,
+            TextParams {
+                font: self.assets.font,
+                font_size: 32,
+                color: WHITE,
+                ..Default::default()
+            },
+        );
+
+        // Draw the score (time bonus)
+        draw_text_ex(
+            &format!("{:.0}", score[1]),
+            65.0,
+            110.0,
+            TextParams {
+                font: self.assets.font,
+                font_size: 32,
+                color: WHITE,
+                ..Default::default()
+            },
+        );
+
+        self.draw_crowd();
+        self.draw_hints();
+        // self.draw_target_outline();
+
+        // Update and draw the timer
+        self.draw_progress_bar()
+    }
+
+    /// Generates a crowd of `num` random characters between the given coordinates.
     /// The first character in the crowd is the target.
-    pub fn gen_crowd(&mut self, num: usize) {
+    pub fn gen_crowd(&mut self, num: usize, x_min: f32, x_max: f32, y_min: f32, y_max: f32) {
         let mut traits_range: Vec<usize> = (0..CHAR_PARTS_COUNT).collect();
         traits_range.shuffle(); // Shuffle the traits range
         self.unique_traits_indices = traits_range[0..3].to_vec(); // Pick the first 3 traits as the unique traits
         self.unique_traits_indices.sort(); // Sort the unique traits indices
 
         self.crowd = Vec::new(); // Clear the crowd
-
-        let x_min = GAME_WIDTH - GROUND_WIDTH - 20.0;
-        let x_max = GAME_WIDTH - CHAR_WIDTH - 40.0;
-        let y_min = GAME_HEIGHT - GROUND_HEIGHT - 50.0;
-        let y_max = GAME_HEIGHT - CHAR_HEIGHT - 70.0;
+        self.crowd_iter = 0; // Reset the crowd iterator
+        self.timer_on = false;
 
         // Generate `num` characters scattered around the level.
         for i in 0..num {
@@ -112,7 +174,7 @@ impl Level {
     pub fn draw_ground(&self) {
         draw_texture_ex(
             self.assets.ground,
-            GAME_WIDTH - GROUND_WIDTH - 30.0,
+            GAME_WIDTH - GROUND_WIDTH - 50.0,
             GAME_HEIGHT - GROUND_HEIGHT - 30.0,
             WHITE,
             DrawTextureParams {
@@ -124,6 +186,21 @@ impl Level {
 
     /// Draws the crowd.
     pub fn draw_crowd(&mut self) {
+        self.spawn_timer -= get_frame_time();
+
+        // Spawn a new character every `SPAWN_DELAY` seconds
+        if self.spawn_timer <= 0.0 && self.crowd_iter < self.crowd.len() {
+            self.crowd[self.crowd_iter].spawned = true;
+            self.spawn_timer = SPAWN_DELAY;
+            self.crowd_iter += 1;
+
+            // Start the timer when the last character is spawned
+            if self.crowd_iter >= self.crowd.len() {
+                self.timer_on = true;
+            }
+        }
+
+        // Draw the crowd
         for character in self.crowd.iter_mut() {
             character.draw();
         }
@@ -132,16 +209,16 @@ impl Level {
     /// Draws the hints for the target character.
     pub fn draw_hints(&self) {
         let hints_text = ["Arms", "Body", "Face", "Hat", "Legs"];
-        let (x, y) = (50.0, GAME_HEIGHT - GROUND_HEIGHT + 110.0);
+        let (x, y) = (70.0, GAME_HEIGHT - GROUND_HEIGHT + 110.0);
         let size = 108.0;
         let padding = 10.0;
         let gap = 20.0;
         let mut hints_color;
 
-        // Draw frame around hints
+        // Draw hints background
         draw_texture_ex(
             self.assets.frame_long,
-            30.0,
+            x - 20.0,
             GAME_HEIGHT - GROUND_HEIGHT - 30.0,
             WHITE,
             DrawTextureParams {
@@ -186,6 +263,7 @@ impl Level {
             },
         );
 
+        // Draw hints
         for i in 0..3 {
             let texture = match self.unique_traits_indices[i] {
                 0 => self.assets.char_arms[self.target_traits[0]],
@@ -200,7 +278,7 @@ impl Level {
             if self.unique_traits_indices[i] == 2 || self.unique_traits_indices[i] == 3 {
                 hints_color = WHITE;
             } else {
-                hints_color = BLUE;
+                hints_color = self.hints_color;
             }
 
             // Draw frame
@@ -248,7 +326,7 @@ impl Level {
     /// Returns `Some(false)` if a non-target character was clicked.
     /// Returns `None` if no character was clicked.
     pub fn check_target_click(&mut self, mouse_pos: (f32, f32)) -> Option<bool> {
-        if is_mouse_button_pressed(MouseButton::Left) {
+        if is_mouse_button_pressed(MouseButton::Left) && self.timer_on {
             let (mouse_x, mouse_y) = mouse_pos;
             println!("Mouse clicked at ({}, {})", mouse_x, mouse_y);
 
@@ -258,6 +336,7 @@ impl Level {
                     && mouse_x <= character.x + CHAR_WIDTH
                     && mouse_y >= character.y
                     && mouse_y <= character.y + CHAR_HEIGHT
+                    && character.spawned
                 {
                     if character.is_target {
                         return Some(true);
@@ -270,25 +349,53 @@ impl Level {
         None
     }
 
-    pub fn draw(&mut self, score: u32) {
-        // Draw the ground
-        self.draw_ground();
+    /// Updates and draws the level progress bar.
+    /// Returns `true` if the timer is up. Returns `false` otherwise.
+    pub fn draw_progress_bar(&mut self) -> bool {
+        let bar_color = if self.timer < (LEVEL_TIME / 3.0) {
+            RED
+        } else if self.timer < (LEVEL_TIME / 3.0 * 2.0) {
+            YELLOW
+        } else {
+            GREEN
+        };
 
-        // Draw the score
-        draw_text_ex(
-            &format!("Score: {}", score),
-            30.0,
-            110.0,
-            TextParams {
-                font: self.assets.font,
-                font_size: 32,
-                color: WHITE,
+        // Draw progress bar background
+        let bar_x = GAME_WIDTH - GROUND_WIDTH - 50.0;
+        let bar_y = 80.0;
+        draw_texture_ex(
+            self.assets.bar[1],
+            bar_x,
+            bar_y,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(BAR_BG_WIDTH, BAR_HEIGHT)),
                 ..Default::default()
             },
         );
-        self.draw_crowd();
-        self.draw_hints();
-        self.draw_target_outline();
+
+        // Draw progress bar
+        let progress = self.timer / LEVEL_TIME;
+        draw_texture_ex(
+            self.assets.bar[0],
+            bar_x + BAR_OFFSET,
+            bar_y,
+            bar_color,
+            DrawTextureParams {
+                dest_size: Some(vec2(BAR_WIDTH * progress, BAR_HEIGHT)),
+                ..Default::default()
+            },
+        );
+
+        // Update timer and check if it's up
+        if !self.timer_on {
+            return false;
+        } else if self.timer > 0.0 {
+            self.timer -= get_frame_time();
+        } else {
+            return true;
+        }
+        false
     }
 
     #[allow(unused)]

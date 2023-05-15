@@ -10,7 +10,6 @@ pub const CHAR_PARTS_COUNT: usize = 5;
 /// Game assets.
 pub struct AssetBundle {
     pub ground: Texture2D,
-    pub bg: Texture2D,
     pub crosshair: Texture2D,
     pub char_arms: [Texture2D; ARMS_COUNT],
     pub char_body: [Texture2D; BODY_COUNT],
@@ -21,6 +20,7 @@ pub struct AssetBundle {
     pub frame: Texture2D,
     pub frame_long: Texture2D,
     pub font: Font,
+    pub bar: [Texture2D; 2],
 }
 
 impl AssetBundle {
@@ -28,7 +28,6 @@ impl AssetBundle {
     pub async fn load() -> Result<AssetBundle, FileError> {
         let mut assets = AssetBundle {
             ground: load_texture("ground.png").await?,
-            bg: load_texture("bg.png").await?,
             crosshair: load_texture("crosshair.png").await?,
             char_arms: [Texture2D::empty(); ARMS_COUNT],
             char_body: [Texture2D::empty(); BODY_COUNT],
@@ -38,16 +37,21 @@ impl AssetBundle {
             logo: load_texture("logo.png").await?,
             frame: load_texture("frame.png").await?,
             frame_long: load_texture("frame-long.png").await?,
-            font: load_ttf_font("04B03.TTF").await.unwrap(), // TODO: Handle error properly
+            font: load_ttf_font("04B03.TTF").await.unwrap(),
+            bar: [
+                load_texture("bar.png").await?,
+                load_texture("bar-bg.png").await?,
+            ],
         };
 
         // Set textures filters to nearest for better pixel art rendering.
         assets.ground.set_filter(FilterMode::Nearest);
-        assets.bg.set_filter(FilterMode::Nearest);
         assets.crosshair.set_filter(FilterMode::Nearest);
         assets.logo.set_filter(FilterMode::Nearest);
         assets.frame.set_filter(FilterMode::Nearest);
         assets.frame_long.set_filter(FilterMode::Nearest);
+        assets.bar[0].set_filter(FilterMode::Nearest);
+        assets.bar[1].set_filter(FilterMode::Nearest);
 
         // Load character textures.
         for i in 0..ARMS_COUNT {
