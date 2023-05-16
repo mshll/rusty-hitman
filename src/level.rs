@@ -202,7 +202,7 @@ impl Level {
 
         // Draw the crowd
         for character in self.crowd.iter_mut() {
-            character.draw();
+            character.draw(true);
         }
     }
 

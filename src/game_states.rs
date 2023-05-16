@@ -10,10 +10,25 @@ impl Game {
     pub fn set_menu(&mut self) {
         self.game_state = Menu;
         self.score = [0.0, 0.0]; // Reset the score
+
+        // Generate 25 characters for the menu background
+        self.level.gen_crowd(
+            25,
+            0.0,
+            GAME_WIDTH - CHAR_WIDTH,
+            0.0,
+            GAME_HEIGHT - CHAR_HEIGHT,
+        );
     }
 
     /// Draws the game menu.
     pub fn menu(&mut self) {
+        // Draw the characters in the background
+        for character in self.level.crowd.iter_mut() {
+            character.spawned = true;
+            character.draw(false);
+        }
+
         draw_rectangle(0.0, 0.0, GAME_WIDTH, GAME_HEIGHT, OVERLAY_PURPLE);
 
         draw_texture_ex(
