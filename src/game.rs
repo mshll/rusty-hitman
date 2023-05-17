@@ -5,11 +5,12 @@ pub enum GameState {
     Menu,
     Playing,
     GameOver,
+    Paused,
 }
 
 use GameState::*;
 
-const SCORE_MAX: f32 = 1000.0;
+const SCORE_BASE: f32 = 100.0;
 
 pub struct Game {
     /// The assets bundle.
@@ -18,7 +19,7 @@ pub struct Game {
     pub level: level::Level,
     /// The game state.
     pub game_state: GameState,
-    /// The score, [targets eliminated, time bonus]
+    /// The score, [level number, total score]
     pub score: [f32; 2],
     /// The game renderer.
     pub renderer: renderer::Renderer,
@@ -44,8 +45,11 @@ impl Game {
 
     /// Increments the score.
     pub fn add_score(&mut self) {
+        let level_bonus = (SCORE_BASE / 10.0) * self.score[0];
+        let time_bonus = (SCORE_BASE + level_bonus) * (self.level.timer / LEVEL_TIME);
+        self.score[1] += SCORE_BASE + level_bonus + time_bonus;
         self.score[0] += 1.0;
-        self.score[1] += SCORE_MAX * (self.level.timer / LEVEL_TIME);
+
         println!("Score: {:.0}, {:.0}", self.score[0], self.score[1]);
     }
 
@@ -62,6 +66,10 @@ impl Game {
 
             Playing => {
                 self.playing();
+
+                if is_key_pressed(KeyCode::Escape) {
+                    self.game_state = Paused;
+                }
             }
 
             GameOver => {
@@ -72,6 +80,17 @@ impl Game {
                     self.set_level();
                 } else if is_key_pressed(KeyCode::Escape) {
                     self.set_menu();
+                }
+            }
+
+            Paused => {
+                self.paused();
+
+                if is_key_pressed(KeyCode::Escape) {
+                    self.set_menu();
+                } else if is_key_pressed(KeyCode::Enter) {
+                    self.game_state = Playing;
+                    self.level.timer_on = true;
                 }
             }
         }

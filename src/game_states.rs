@@ -123,4 +123,30 @@ impl Game {
             WHITE,
         );
     }
+
+    /// Draws the game paused screen.
+    pub fn paused(&mut self) {
+        self.level.timer_on = false;
+        self.level.draw(self.score);
+
+        draw_rectangle(0.0, 0.0, GAME_WIDTH, GAME_HEIGHT, BG_PURPLE);
+
+        draw_text_centered(
+            "Paused",
+            GAME_WIDTH / 2.0,
+            GAME_HEIGHT / 2.0 - 50.0,
+            self.assets.font,
+            80,
+            WHITE,
+        );
+
+        draw_text_centered(
+            "Press Enter to resume",
+            GAME_WIDTH / 2.0,
+            GAME_HEIGHT / 2.0 + 50.0,
+            self.assets.font,
+            32,
+            WHITE,
+        );
+    }
 }

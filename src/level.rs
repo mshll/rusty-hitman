@@ -54,10 +54,11 @@ impl Level {
         // Draw the ground
         self.draw_ground();
 
-        // Draw the score (targets eliminated)
+        // Draw level number
+        let text_size = measure_text("TEXT", Some(self.assets.font), 32, 1.0);
         draw_text_ex(
-            &format!("Target: {:.0}", score[0]),
-            65.0,
+            &format!("{:.0}", score[0]),
+            110.0,
             70.0,
             TextParams {
                 font: self.assets.font,
@@ -66,8 +67,18 @@ impl Level {
                 ..Default::default()
             },
         );
+        draw_texture_ex(
+            self.assets.skull,
+            60.0,
+            70.0 - text_size.height * 1.25,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(text_size.height * 1.5, text_size.height * 1.5)),
+                ..Default::default()
+            },
+        );
 
-        // Draw the score (time bonus)
+        // Draw the total score
         draw_text_ex(
             &format!("{:.0}", score[1]),
             65.0,
