@@ -25,6 +25,8 @@ pub struct Game {
     pub game_state: GameState,
     /// The score, [level number, total score]
     pub score: [f32; 2],
+    // Highscore.
+    pub highscore: [f32; 2],
     /// The game over flag.
     pub game_over: bool,
     /// The game renderer.
@@ -76,6 +78,7 @@ impl Game {
             level,
             game_state: Menu,
             score: [0.0, 0.0],
+            highscore: [-1.0, -1.0],
             game_over: false,
             renderer: renderer::Renderer::init(GAME_WIDTH, GAME_HEIGHT),
             bullet_fx,

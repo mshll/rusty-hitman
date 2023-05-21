@@ -11,6 +11,17 @@ impl Game {
         self.game_state = Menu;
         self.score = [0.0, 0.0]; // Reset the score
 
+        // Load the highscore from storage if it exists
+        let storage = &mut quad_storage::STORAGE.lock().unwrap();
+        if let [Some(highscore_0), Some(highscore_1)] =
+            [storage.get("highscore_0"), storage.get("highscore_1")]
+        {
+            self.highscore = [
+                highscore_0.parse::<f32>().unwrap(),
+                highscore_1.parse::<f32>().unwrap(),
+            ];
+        }
+
         // Generate 25 characters for the menu background
         self.level.gen_crowd(
             25,
@@ -34,7 +45,7 @@ impl Game {
         draw_texture_ex(
             self.assets.logo,
             GAME_WIDTH / 2.0 - 300.0,
-            GAME_HEIGHT / 2.0 - 200.0,
+            GAME_HEIGHT / 2.0 - 250.0,
             WHITE,
             DrawTextureParams {
                 dest_size: Some(vec2(595.0, 133.0)),
@@ -42,10 +53,22 @@ impl Game {
             },
         );
 
+        // Draw the highscore
+        if self.highscore[0] > 0.0 {
+            draw_text_centered(
+                &format!("- HIGHSCORE: {:.0} -", self.highscore[1]),
+                GAME_WIDTH / 2.0,
+                GAME_HEIGHT / 2.2,
+                self.assets.font,
+                32,
+                WHITE,
+            );
+        }
+
         draw_text_centered(
             "Press Enter to start",
             GAME_WIDTH / 2.0,
-            GAME_HEIGHT / 1.5,
+            GAME_HEIGHT / 1.3,
             self.assets.font,
             32,
             WHITE,
@@ -122,11 +145,22 @@ impl Game {
     /// Sets the game state to game over.
     pub fn set_game_over(&mut self) {
         self.game_state = GameOver;
+
+        let storage = &mut quad_storage::STORAGE.lock().unwrap();
+        if let Some(highscore) = storage.get("highscore_1") {
+            if self.score[1] > highscore.parse::<f32>().unwrap() {
+                storage.set("highscore_1", &self.score[1].to_string());
+            }
+        } else {
+            storage.set("highscore_0", &self.score[0].to_string());
+            storage.set("highscore_1", &self.score[1].to_string());
+        }
     }
 
     /// Draws the game over screen.
     pub fn game_over(&mut self) {
         self.level.draw(self.score); // Keep showing the level behind the overlay
+
         draw_rectangle(0.0, 0.0, GAME_WIDTH, GAME_HEIGHT, OVERLAY_PURPLE);
 
         draw_text_centered(
