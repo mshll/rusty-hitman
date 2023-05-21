@@ -22,6 +22,7 @@ pub struct AssetBundle {
     pub font: Font,
     pub bar: [Texture2D; 2],
     pub skull: Texture2D,
+    pub blood: Texture2D,
 }
 
 impl AssetBundle {
@@ -44,6 +45,7 @@ impl AssetBundle {
                 load_texture("bar-bg.png").await?,
             ],
             skull: load_texture("skull.png").await?,
+            blood: load_texture("blood.png").await?,
         };
 
         // Set textures filters to nearest for better pixel art rendering.
@@ -55,6 +57,7 @@ impl AssetBundle {
         assets.bar[0].set_filter(FilterMode::Nearest);
         assets.bar[1].set_filter(FilterMode::Nearest);
         assets.skull.set_filter(FilterMode::Nearest);
+        assets.blood.set_filter(FilterMode::Nearest);
 
         // Load character textures.
         for i in 0..ARMS_COUNT {

@@ -8,15 +8,16 @@ pub struct Character {
     pub x: f32,
     pub y: f32,
     pub is_target: bool,
-    pub textures: [Texture2D; 5],
+    pub textures: [Texture2D; 6],
     pub color: Color,
     pub spawned: bool,
+    pub dead: bool,
     pub smoke_fx: Emitter,
 }
 
 impl Character {
     /// Creates a new `Character` with the given position and textures.
-    pub fn init(x: f32, y: f32, textures: [Texture2D; 5]) -> Character {
+    pub fn init(x: f32, y: f32, textures: [Texture2D; 6]) -> Character {
         // Smoke particle effect when spawning.
         let smoke_fx = Emitter::new(EmitterConfig {
             emission_shape: EmissionShape::Sphere { radius: 50.0 },
@@ -56,6 +57,7 @@ impl Character {
             is_target: false,
             color: rand_color(),
             spawned: false,
+            dead: false,
             smoke_fx,
         }
     }
@@ -65,6 +67,19 @@ impl Character {
     /// If `use_smoke` is true, the character will spawn with a smoke effect.
     pub fn draw(&mut self, use_smoke: bool) {
         if !self.spawned {
+            return;
+        } else if self.dead {
+            // Draw blood splatter if the character is dead.
+            draw_texture_ex(
+                self.textures[asset_bundle::CHAR_PARTS_COUNT],
+                self.x,
+                self.y,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(CHAR_WIDTH, CHAR_HEIGHT)),
+                    ..Default::default()
+                },
+            );
             return;
         }
 

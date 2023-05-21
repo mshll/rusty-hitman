@@ -166,6 +166,7 @@ impl Level {
                         self.assets.char_face[char_rand[2]],
                         self.assets.char_hat[char_rand[3]],
                         self.assets.char_legs[char_rand[4]],
+                        self.assets.blood, // blood texture (for when the character is killed)
                     ],
                 ));
 
@@ -331,36 +332,8 @@ impl Level {
         }
     }
 
-    /// Checks if the mouse clicked on a character.
-    ///
-    /// Returns `Some(true)` if the target character was clicked.
-    /// Returns `Some(false)` if a non-target character was clicked.
-    /// Returns `None` if no character was clicked.
-    pub fn check_target_click(&mut self, mouse_pos: (f32, f32)) -> Option<bool> {
-        if is_mouse_button_pressed(MouseButton::Left) && self.timer_on {
-            let (mouse_x, mouse_y) = mouse_pos;
-            println!("Mouse clicked at ({}, {})", mouse_x, mouse_y);
-
-            // Check if mouse clicked on a character
-            for character in self.crowd.iter_mut() {
-                if mouse_x >= character.x
-                    && mouse_x <= character.x + CHAR_WIDTH
-                    && mouse_y >= character.y
-                    && mouse_y <= character.y + CHAR_HEIGHT
-                    && character.spawned
-                {
-                    if character.is_target {
-                        return Some(true);
-                    } else {
-                        return Some(false);
-                    }
-                }
-            }
-        }
-        None
-    }
-
     /// Updates and draws the level progress bar.
+    ///
     /// Returns `true` if the timer is up. Returns `false` otherwise.
     pub fn draw_progress_bar(&mut self) -> bool {
         let bar_color = if self.timer < (LEVEL_TIME / 3.0) {

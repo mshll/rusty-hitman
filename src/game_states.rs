@@ -55,6 +55,7 @@ impl Game {
     /// Sets the game up for playing.
     pub fn set_level(&mut self) {
         self.game_state = Playing;
+        self.game_over = false;
 
         // Spawn 3 characters at first and add 1 for every 5 levels (max of 10)
         let mut num_chars = 3 + (self.score[0] / 5.0) as usize;
@@ -81,13 +82,10 @@ impl Game {
         let mut game_over = self.level.draw(self.score);
 
         // Check if the player clicked on the target or another character
-        if let Some(target_found) = self
-            .level
-            .check_target_click(self.renderer.mouse_position())
-        {
+        if let Some(target_found) = self.check_target_click() {
             if target_found {
                 self.add_score();
-                self.set_level();
+                self.game_state = LevelTransition;
             } else {
                 game_over = true;
             }
@@ -95,9 +93,35 @@ impl Game {
 
         // Check if the game is over (time is up)
         if game_over {
-            self.game_state = GameOver;
-            self.level.timer_on = false;
+            self.game_over = true;
+            self.game_state = LevelTransition;
         }
+
+        // Show shooting particle effect (only plays when the mouse is pressed)
+        self.bullet_fx.draw(self.renderer.mouse_position().into());
+    }
+
+    pub fn level_transition(&mut self) {
+        if self.transition_timer > 0.0 {
+            self.transition_timer -= get_frame_time();
+            self.level.draw(self.score);
+            self.level.timer_on = false;
+
+            self.bullet_fx.draw(self.renderer.mouse_position().into());
+            return;
+        }
+
+        self.transition_timer = TRANSITION_DELAY;
+        if !self.game_over {
+            self.set_level();
+        } else {
+            self.set_game_over();
+        }
+    }
+
+    /// Sets the game state to game over.
+    pub fn set_game_over(&mut self) {
+        self.game_state = GameOver;
     }
 
     /// Draws the game over screen.
