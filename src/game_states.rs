@@ -3,6 +3,7 @@
 //! Game states logic implementation.
 
 use crate::*;
+use macroquad::audio::*;
 use GameState::*;
 
 impl Game {
@@ -10,15 +11,17 @@ impl Game {
     pub fn set_menu(&mut self) {
         self.game_state = Menu;
         self.score = [0.0, 0.0]; // Reset the score
+        utils::sound::play_sound_looped(self.assets.bg_music, 1.0);
 
         // Load the highscore from storage if it exists
         let storage = &mut quad_storage::STORAGE.lock().unwrap();
-        if let [Some(highscore_0), Some(highscore_1)] =
-            [storage.get("highscore_0"), storage.get("highscore_1")]
-        {
+        if let [Some(highscore_level), Some(highscore_total)] = [
+            storage.get("highscore_level"),
+            storage.get("highscore_total"),
+        ] {
             self.highscore = [
-                highscore_0.parse::<f32>().unwrap(),
-                highscore_1.parse::<f32>().unwrap(),
+                highscore_level.parse::<f32>().unwrap(),
+                highscore_total.parse::<f32>().unwrap(),
             ];
         }
 
@@ -79,6 +82,7 @@ impl Game {
     pub fn set_level(&mut self) {
         self.game_state = Playing;
         self.game_over = false;
+        set_sound_volume(self.assets.bg_music, 0.25);
 
         // Spawn 3 characters at first and add 1 for every 5 levels (max of 10)
         let mut num_chars = 3 + (self.score[0] / 5.0) as usize;
@@ -110,6 +114,8 @@ impl Game {
                 self.add_score();
                 self.game_state = LevelTransition;
             } else {
+                play_sound_once(self.assets.game_over_sound);
+                set_sound_volume(self.assets.bg_music, 0.0);
                 game_over = true;
             }
         }
@@ -147,14 +153,14 @@ impl Game {
         self.game_state = GameOver;
 
         let storage = &mut quad_storage::STORAGE.lock().unwrap();
-        if let Some(highscore) = storage.get("highscore_1") {
-            if self.score[1] > highscore.parse::<f32>().unwrap() {
-                storage.set("highscore_1", &self.score[1].to_string());
+        if let Some(highscore) = storage.get("highscore_total") {
+            if self.score[1] < highscore.parse::<f32>().unwrap() {
+                return; // Don't save the highscore if it's lower than the current one
             }
-        } else {
-            storage.set("highscore_0", &self.score[0].to_string());
-            storage.set("highscore_1", &self.score[1].to_string());
         }
+        // Save the highscore to storage if it's higher than the current one (or if there isn't one yet)
+        storage.set("highscore_level", &self.score[0].to_string());
+        storage.set("highscore_total", &self.score[1].to_string());
     }
 
     /// Draws the game over screen.
@@ -185,7 +191,6 @@ impl Game {
     /// Draws the game paused screen.
     pub fn paused(&mut self) {
         self.level.timer_on = false;
-        self.level.draw(self.score);
 
         draw_rectangle(0.0, 0.0, GAME_WIDTH, GAME_HEIGHT, BG_PURPLE);
 

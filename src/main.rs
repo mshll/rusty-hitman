@@ -6,17 +6,16 @@
 
 mod asset_bundle;
 mod character;
-mod colors;
 mod game;
 mod game_states;
 mod level;
 mod renderer;
-mod text;
-use colors::*;
+mod utils;
 use game::*;
+use macroquad::prelude::*;
 use macroquad::rand::{gen_range, srand, ChooseRandom};
-use macroquad::{color::Color, prelude::*};
-use text::*;
+use utils::colors::*;
+use utils::text::*;
 
 const GAME_WIDTH: f32 = 1280.0;
 const GAME_HEIGHT: f32 = 720.0;

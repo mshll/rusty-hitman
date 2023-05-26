@@ -1,4 +1,5 @@
 use crate::*;
+use macroquad::audio::*;
 use macroquad_particles::*;
 use std::rc::Rc;
 use GameState::*;
@@ -126,6 +127,7 @@ impl Game {
 
                 if is_key_pressed(KeyCode::Enter) {
                     self.set_level();
+                    play_sound_once(self.assets.menu_in_sound);
                 }
             }
 
@@ -134,6 +136,8 @@ impl Game {
 
                 if is_key_pressed(KeyCode::Escape) {
                     self.game_state = Paused;
+                    play_sound_once(self.assets.pause_sound);
+                    set_sound_volume(self.assets.bg_music, 0.0);
                 }
             }
 
@@ -147,8 +151,11 @@ impl Game {
                 if is_key_pressed(KeyCode::Enter) {
                     self.score = [0.0, 0.0];
                     self.set_level();
+                    play_sound_once(self.assets.menu_in_sound);
+                    utils::sound::play_sound_looped(self.assets.bg_music, 0.25);
                 } else if is_key_pressed(KeyCode::Escape) {
                     self.set_menu();
+                    play_sound_once(self.assets.menu_out_sound);
                 }
             }
 
@@ -157,9 +164,12 @@ impl Game {
 
                 if is_key_pressed(KeyCode::Escape) {
                     self.set_menu();
+                    play_sound_once(self.assets.menu_out_sound);
                 } else if is_key_pressed(KeyCode::Enter) {
                     self.game_state = Playing;
                     self.level.timer_on = true;
+                    play_sound_once(self.assets.menu_in_sound);
+                    set_sound_volume(self.assets.bg_music, 0.25);
                 }
             }
         }
@@ -180,6 +190,7 @@ impl Game {
 
             // Trigger bullet particle effect
             self.bullet_fx.config.emitting = true;
+            play_sound_once(self.assets.shoot_sound);
 
             // Check if mouse clicked on a character
             for character in self.level.crowd.iter_mut() {

@@ -3,6 +3,7 @@
 use crate::asset_bundle::*;
 use crate::character::Character;
 use crate::*;
+use macroquad::audio::*;
 use std::rc::Rc;
 
 const BAR_BG_WIDTH: f32 = GROUND_WIDTH;
@@ -206,6 +207,8 @@ impl Level {
             self.spawn_timer = SPAWN_DELAY;
             self.crowd_iter += 1;
 
+            play_sound_once(self.assets.spawn_sound);
+
             // Start the timer when the last character is spawned
             if self.crowd_iter >= self.crowd.len() {
                 self.timer_on = true;
@@ -277,7 +280,7 @@ impl Level {
 
         // Draw hints
         for i in 0..3 {
-            let texture = match self.unique_traits_indices[i] {
+            let mut texture = match self.unique_traits_indices[i] {
                 0 => self.assets.char_arms[self.target_traits[0]],
                 1 => self.assets.char_body[self.target_traits[1]],
                 2 => self.assets.char_face[self.target_traits[2]],
@@ -285,6 +288,11 @@ impl Level {
                 4 => self.assets.char_legs[self.target_traits[4]],
                 _ => panic!("Invalid trait index!"), // TODO: Remove and use Result instead?
             };
+
+            // If the character has no hat, draw the empty texture instead.
+            if texture == self.assets.char_hat[0] {
+                texture = self.assets.empty;
+            }
 
             // Don't colorize the face and hat.
             if self.unique_traits_indices[i] == 2 || self.unique_traits_indices[i] == 3 {
@@ -337,11 +345,11 @@ impl Level {
     /// Returns `true` if the timer is up. Returns `false` otherwise.
     pub fn draw_progress_bar(&mut self) -> bool {
         let bar_color = if self.timer < (LEVEL_TIME / 3.0) {
-            RED
+            COLOR_RED
         } else if self.timer < (LEVEL_TIME / 3.0 * 2.0) {
-            YELLOW
+            COLOR_YELLOW
         } else {
-            GREEN
+            COLOR_GREEN
         };
 
         // Draw progress bar background

@@ -1,9 +1,10 @@
+use macroquad::audio::*;
 use macroquad::prelude::*;
 
 pub const ARMS_COUNT: usize = 7;
 pub const BODY_COUNT: usize = 10;
 pub const FACE_COUNT: usize = 10;
-pub const HAT_COUNT: usize = 7;
+pub const HAT_COUNT: usize = 8;
 pub const LEGS_COUNT: usize = 5;
 pub const CHAR_PARTS_COUNT: usize = 5;
 
@@ -23,10 +24,18 @@ pub struct AssetBundle {
     pub bar: [Texture2D; 2],
     pub skull: Texture2D,
     pub blood: Texture2D,
+    pub empty: Texture2D,
+    pub bg_music: Sound,
+    pub spawn_sound: Sound,
+    pub shoot_sound: Sound,
+    pub game_over_sound: Sound,
+    pub menu_in_sound: Sound,
+    pub menu_out_sound: Sound,
+    pub pause_sound: Sound,
 }
 
 impl AssetBundle {
-    /// Loads all game textures.
+    /// Loads all game assets.
     pub async fn load() -> Result<AssetBundle, FileError> {
         let mut assets = AssetBundle {
             ground: load_texture("ground.png").await?,
@@ -46,6 +55,14 @@ impl AssetBundle {
             ],
             skull: load_texture("skull.png").await?,
             blood: load_texture("blood.png").await?,
+            empty: load_texture("empty.png").await?,
+            bg_music: load_sound("audio/puzzle_pieces.wav").await?,
+            spawn_sound: load_sound("audio/spawn.wav").await?,
+            shoot_sound: load_sound("audio/shoot.wav").await?,
+            game_over_sound: load_sound("audio/evil_laugh.wav").await?,
+            menu_in_sound: load_sound("audio/menu_in.wav").await?,
+            menu_out_sound: load_sound("audio/menu_out.wav").await?,
+            pause_sound: load_sound("audio/pause.wav").await?,
         };
 
         // Set textures filters to nearest for better pixel art rendering.
@@ -58,6 +75,7 @@ impl AssetBundle {
         assets.bar[1].set_filter(FilterMode::Nearest);
         assets.skull.set_filter(FilterMode::Nearest);
         assets.blood.set_filter(FilterMode::Nearest);
+        assets.empty.set_filter(FilterMode::Nearest);
 
         // Load character textures.
         for i in 0..ARMS_COUNT {
