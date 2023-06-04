@@ -116,22 +116,31 @@ impl Level {
         for i in 0..num {
             // Generate a position for the character
             let mut pos_valid = false;
+            let (mut attempt, attempt_max) = (0, 1000);
             let mut x = 0.0;
             let mut y = 0.0;
 
-            while !pos_valid {
+            while !pos_valid && attempt < attempt_max {
                 pos_valid = true;
                 x = gen_range(x_min, x_max);
                 y = gen_range(y_min, y_max);
 
                 // Check if the position is valid (not colliding with another character)
                 for character in &self.crowd {
-                    if (character.x - x).abs() < CHAR_HEIGHT && (character.y - y).abs() < CHAR_WIDTH
+                    if x + CHAR_WIDTH > character.x
+                        && x < character.x + CHAR_WIDTH
+                        && y + CHAR_HEIGHT > character.y
+                        && y < character.y + CHAR_HEIGHT
                     {
                         pos_valid = false;
                         break;
                     }
                 }
+                attempt += 1;
+            }
+
+            if attempt >= attempt_max {
+                break; // Stop generating characters if the max attempts is reached
             }
 
             // Generate a random character
@@ -395,7 +404,28 @@ impl Level {
     pub fn draw_target_outline(&self) {
         for character in self.crowd.iter() {
             if character.is_target {
-                draw_rectangle_lines(character.x, character.y, CHAR_WIDTH, CHAR_HEIGHT, 5.0, RED);
+                draw_rectangle_lines(
+                    character.x,
+                    character.y + CLICK_OFFSET,
+                    CHAR_WIDTH,
+                    CHAR_HEIGHT - CLICK_OFFSET,
+                    5.0,
+                    COLOR_RED,
+                );
+            }
+        }
+    }
+
+    /// Blink the target character.
+    pub fn blink_target(&mut self) {
+        for character in self.crowd.iter_mut() {
+            if character.is_target {
+                if get_time() % 0.5 < 0.25 {
+                    character.spawned = false;
+                } else {
+                    character.spawned = true;
+                }
+                break;
             }
         }
     }

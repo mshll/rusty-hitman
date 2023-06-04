@@ -1,10 +1,10 @@
 use macroquad::audio::*;
 use macroquad::prelude::*;
 
-pub const ARMS_COUNT: usize = 7;
+pub const ARMS_COUNT: usize = 9;
 pub const BODY_COUNT: usize = 10;
-pub const FACE_COUNT: usize = 10;
-pub const HAT_COUNT: usize = 8;
+pub const FACE_COUNT: usize = 13;
+pub const HAT_COUNT: usize = 10;
 pub const LEGS_COUNT: usize = 5;
 pub const CHAR_PARTS_COUNT: usize = 5;
 

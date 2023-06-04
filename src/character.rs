@@ -88,7 +88,7 @@ impl Character {
             let mut color = self.color;
 
             if i == 2 {
-                y += 6.0; // Offset the face by 6 pixels.
+                y += 10.0; // Offset the face by 10 pixels.
             }
             if i == 2 || i == 3 {
                 color = WHITE; // Don't colorize the face or hat.

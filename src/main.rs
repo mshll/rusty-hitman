@@ -43,11 +43,5 @@ async fn main() {
     show_mouse(false); // Hide the mouse cursor
 
     let mut game = Game::init().await;
-
-    loop {
-        clear_background(BG_PURPLE);
-
-        game.update().await;
-        next_frame().await
-    }
+    game.update().await;
 }

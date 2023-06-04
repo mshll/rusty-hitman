@@ -25,9 +25,9 @@ impl Game {
             ];
         }
 
-        // Generate 25 characters for the menu background
+        // Generate characters for the menu background
         self.level.gen_crowd(
-            25,
+            200,
             0.0,
             GAME_WIDTH - CHAR_WIDTH,
             0.0,
@@ -68,13 +68,14 @@ impl Game {
             );
         }
 
-        draw_text_centered(
+        draw_blinking_text(
             "Press Enter to start",
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 1.3,
             self.assets.font,
             32,
             WHITE,
+            1.5,
         );
     }
 
@@ -104,46 +105,47 @@ impl Game {
     }
 
     /// Draws and updates the game while playing.
-    pub fn playing(&mut self) {
+    pub async fn playing(&mut self) {
         // Draw the level
-        let mut game_over = self.level.draw(self.score);
+        self.game_over = self.level.draw(self.score);
+        self.bullet_fx.draw(self.renderer.mouse_position().into());
 
         // Check if the player clicked on the target or another character
         if let Some(target_found) = self.check_target_click() {
             if target_found {
                 self.add_score();
-                self.game_state = LevelTransition;
             } else {
-                play_sound_once(self.assets.game_over_sound);
-                set_sound_volume(self.assets.bg_music, 0.0);
-                game_over = true;
+                self.game_over = true;
             }
-        }
-
-        // Check if the game is over (time is up)
-        if game_over {
-            self.game_over = true;
-            self.game_state = LevelTransition;
-        }
-
-        // Show shooting particle effect (only plays when the mouse is pressed)
-        self.bullet_fx.draw(self.renderer.mouse_position().into());
-    }
-
-    pub fn level_transition(&mut self) {
-        if self.transition_timer > 0.0 {
-            self.transition_timer -= get_frame_time();
-            self.level.draw(self.score);
-            self.level.timer_on = false;
-
-            self.bullet_fx.draw(self.renderer.mouse_position().into());
+            self.transition_level().await;
             return;
         }
 
-        self.transition_timer = TRANSITION_DELAY;
+        if self.game_over {
+            self.transition_level().await;
+        }
+    }
+
+    pub async fn transition_level(&mut self) {
+        self.level.timer_on = false;
+
         if !self.game_over {
+            draw_game_screen_for!(self, 0.5, {
+                self.level.draw(self.score);
+                self.bullet_fx.draw(self.renderer.mouse_position().into());
+            });
+
             self.set_level();
         } else {
+            play_sound_once(self.assets.game_over_sound);
+            set_sound_volume(self.assets.bg_music, 0.0);
+
+            draw_game_screen_for!(self, 3.0, {
+                self.level.draw(self.score);
+                self.bullet_fx.draw(self.renderer.mouse_position().into());
+                self.level.blink_target();
+            });
+
             self.set_game_over();
         }
     }
@@ -172,19 +174,50 @@ impl Game {
         draw_text_centered(
             "Game Over",
             GAME_WIDTH / 2.0,
-            GAME_HEIGHT / 2.0 - 50.0,
+            GAME_HEIGHT / 2.0 - 120.0,
             self.assets.font,
             80,
             WHITE,
         );
 
-        draw_text_centered(
+        // Draw the highscore
+        if self.score[1] > self.highscore[1] && self.highscore[0] > 0.0 {
+            draw_text_centered(
+                "- NEW HIGHSCORE! -",
+                GAME_WIDTH / 2.0,
+                GAME_HEIGHT / 2.2,
+                self.assets.font,
+                32,
+                WHITE,
+            );
+        } else if self.highscore[0] > 0.0 {
+            draw_text_centered(
+                &format!("- HIGHSCORE: {:.0} -", self.highscore[1]),
+                GAME_WIDTH / 2.0,
+                GAME_HEIGHT / 2.2,
+                self.assets.font,
+                32,
+                WHITE,
+            );
+        }
+
+        draw_blinking_text(
             "Press Enter to restart",
             GAME_WIDTH / 2.0,
-            GAME_HEIGHT / 2.0 + 50.0,
+            GAME_HEIGHT / 1.3,
             self.assets.font,
             32,
             WHITE,
+            1.5,
+        );
+        draw_blinking_text(
+            "Or Esc to quit",
+            GAME_WIDTH / 2.0,
+            GAME_HEIGHT / 1.2,
+            self.assets.font,
+            32,
+            WHITE,
+            1.5,
         );
     }
 
@@ -203,13 +236,23 @@ impl Game {
             WHITE,
         );
 
-        draw_text_centered(
+        draw_blinking_text(
             "Press Enter to resume",
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 2.0 + 50.0,
             self.assets.font,
             32,
             WHITE,
+            1.5,
+        );
+        draw_blinking_text(
+            "Or Esc to quit",
+            GAME_WIDTH / 2.0,
+            GAME_HEIGHT / 2.0 + 100.0,
+            self.assets.font,
+            32,
+            WHITE,
+            1.5,
         );
     }
 }

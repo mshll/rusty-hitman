@@ -7,7 +7,6 @@ use GameState::*;
 pub enum GameState {
     Menu,
     Playing,
-    LevelTransition,
     GameOver,
     Paused,
 }
@@ -15,7 +14,7 @@ pub enum GameState {
 const SCORE_BASE: f32 = 100.0;
 pub const SPAWN_DELAY: f32 = 0.2;
 pub const LEVEL_TIME: f32 = 10.0;
-pub const TRANSITION_DELAY: f32 = 0.5;
+pub const CLICK_OFFSET: f32 = 20.0;
 
 pub struct Game {
     /// The assets bundle.
@@ -34,8 +33,6 @@ pub struct Game {
     pub renderer: renderer::Renderer,
     // Shooting particle effect
     pub bullet_fx: Emitter,
-    /// The level transition timer.
-    pub transition_timer: f32,
 }
 
 impl Game {
@@ -83,7 +80,6 @@ impl Game {
             game_over: false,
             renderer: renderer::Renderer::init(GAME_WIDTH, GAME_HEIGHT),
             bullet_fx,
-            transition_timer: TRANSITION_DELAY,
         };
 
         game.set_menu();
@@ -101,7 +97,7 @@ impl Game {
     }
 
     /// Draws a crosshair cursor at the mouse position.
-    fn draw_cursor(&self, width: f32, height: f32) {
+    pub fn draw_cursor(&mut self, width: f32, height: f32) {
         let (mouse_x, mouse_y) = mouse_position();
         // Draw the custom cursor at the mouse position
         draw_texture_ex(
@@ -118,64 +114,56 @@ impl Game {
 
     /// Updates the game based on the game state.
     pub async fn update(&mut self) {
-        self.renderer.set();
-        clear_background(BG_PURPLE);
+        draw_game_screen!(self, {
+            match self.game_state {
+                Menu => {
+                    self.menu();
 
-        match self.game_state {
-            Menu => {
-                self.menu();
+                    if is_key_pressed(KeyCode::Enter) {
+                        self.set_level();
+                        play_sound_once(self.assets.menu_in_sound);
+                    }
+                }
 
-                if is_key_pressed(KeyCode::Enter) {
-                    self.set_level();
-                    play_sound_once(self.assets.menu_in_sound);
+                Playing => {
+                    self.playing().await;
+
+                    if is_key_pressed(KeyCode::Escape) {
+                        self.game_state = Paused;
+                        play_sound_once(self.assets.pause_sound);
+                        set_sound_volume(self.assets.bg_music, 0.0);
+                    }
+                }
+
+                GameOver => {
+                    self.game_over();
+
+                    if is_key_pressed(KeyCode::Enter) {
+                        self.score = [0.0, 0.0];
+                        self.set_level();
+                        play_sound_once(self.assets.menu_in_sound);
+                        utils::sound::play_sound_looped(self.assets.bg_music, 0.25);
+                    } else if is_key_pressed(KeyCode::Escape) {
+                        self.set_menu();
+                        play_sound_once(self.assets.menu_out_sound);
+                    }
+                }
+
+                Paused => {
+                    self.paused();
+
+                    if is_key_pressed(KeyCode::Escape) {
+                        self.set_menu();
+                        play_sound_once(self.assets.menu_out_sound);
+                    } else if is_key_pressed(KeyCode::Enter) {
+                        self.game_state = Playing;
+                        self.level.timer_on = true;
+                        play_sound_once(self.assets.menu_in_sound);
+                        set_sound_volume(self.assets.bg_music, 0.25);
+                    }
                 }
             }
-
-            Playing => {
-                self.playing();
-
-                if is_key_pressed(KeyCode::Escape) {
-                    self.game_state = Paused;
-                    play_sound_once(self.assets.pause_sound);
-                    set_sound_volume(self.assets.bg_music, 0.0);
-                }
-            }
-
-            LevelTransition => {
-                self.level_transition();
-            }
-
-            GameOver => {
-                self.game_over();
-
-                if is_key_pressed(KeyCode::Enter) {
-                    self.score = [0.0, 0.0];
-                    self.set_level();
-                    play_sound_once(self.assets.menu_in_sound);
-                    utils::sound::play_sound_looped(self.assets.bg_music, 0.25);
-                } else if is_key_pressed(KeyCode::Escape) {
-                    self.set_menu();
-                    play_sound_once(self.assets.menu_out_sound);
-                }
-            }
-
-            Paused => {
-                self.paused();
-
-                if is_key_pressed(KeyCode::Escape) {
-                    self.set_menu();
-                    play_sound_once(self.assets.menu_out_sound);
-                } else if is_key_pressed(KeyCode::Enter) {
-                    self.game_state = Playing;
-                    self.level.timer_on = true;
-                    play_sound_once(self.assets.menu_in_sound);
-                    set_sound_volume(self.assets.bg_music, 0.25);
-                }
-            }
-        }
-
-        self.renderer.draw();
-        self.draw_cursor(96.0, 96.0);
+        })
     }
 
     /// Checks if the mouse clicked on a character.
@@ -196,7 +184,7 @@ impl Game {
             for character in self.level.crowd.iter_mut() {
                 if mouse_x >= character.x
                     && mouse_x <= character.x + CHAR_WIDTH
-                    && mouse_y >= character.y
+                    && mouse_y >= character.y + CLICK_OFFSET
                     && mouse_y <= character.y + CHAR_HEIGHT
                     && character.spawned
                 {
@@ -212,4 +200,39 @@ impl Game {
         }
         None
     }
+}
+
+#[macro_export]
+/// Macro to draw the game screen.
+macro_rules! draw_game_screen {
+    ($game:expr, $code:block) => {
+        loop {
+            clear_background(BG_PURPLE);
+            $game.renderer.set();
+            clear_background(BG_PURPLE);
+
+            $code
+
+            $game.renderer.draw();
+            $game.draw_cursor(96.0, 96.0);
+            next_frame().await
+        }
+    };
+}
+
+#[macro_export]
+/// Macro to draw the game screen for `seconds` seconds.
+macro_rules! draw_game_screen_for {
+    ($game:expr, $seconds:expr, $code:block) => {
+        let mut timer = $seconds;
+        draw_game_screen!($game, {
+            timer -= get_frame_time();
+
+            $code
+
+            if timer <= 0.0 {
+                break;
+            }
+        })
+    };
 }
