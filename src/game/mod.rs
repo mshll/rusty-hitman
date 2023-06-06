@@ -1,8 +1,30 @@
-use crate::*;
-use macroquad::audio::*;
+//! Game module.
+//!
+//! Game logic and implementation.
+
+mod asset_bundle;
+mod game_states;
+mod level;
+mod renderer;
+mod utils;
+use asset_bundle::*;
+use level::*;
+use macroquad::{audio::*, prelude::*};
 use macroquad_particles::*;
 use std::rc::Rc;
+use utils::colors::*;
 use GameState::*;
+
+pub const GAME_WIDTH: f32 = 1280.0;
+pub const GAME_HEIGHT: f32 = 720.0;
+const CHAR_WIDTH: f32 = 120.0;
+const CHAR_HEIGHT: f32 = 120.0;
+const GROUND_WIDTH: f32 = 867.0;
+const GROUND_HEIGHT: f32 = 564.0;
+const SCORE_BASE: f32 = 100.0;
+const SPAWN_DELAY: f32 = 0.2;
+const LEVEL_TIME: f32 = 10.0;
+const CLICK_OFFSET: f32 = 20.0;
 
 pub enum GameState {
     Menu,
@@ -11,35 +33,34 @@ pub enum GameState {
     Paused,
 }
 
-const SCORE_BASE: f32 = 100.0;
-pub const SPAWN_DELAY: f32 = 0.2;
-pub const LEVEL_TIME: f32 = 10.0;
-pub const CLICK_OFFSET: f32 = 20.0;
-
 pub struct Game {
-    /// The assets bundle.
-    pub assets: Rc<asset_bundle::AssetBundle>,
+    /// Game assets.
+    assets: Rc<asset_bundle::AssetBundle>,
     /// The level struct.
-    pub level: level::Level,
+    level: level::Level,
     /// The game state.
-    pub game_state: GameState,
+    game_state: GameState,
     /// The score, [level number, total score]
-    pub score: [f32; 2],
+    score: [f32; 2],
     // Highscore.
-    pub highscore: [f32; 2],
+    highscore: [f32; 2],
     /// The game over flag.
-    pub game_over: bool,
+    game_over: bool,
     /// The game renderer.
-    pub renderer: renderer::Renderer,
+    renderer: renderer::Renderer,
     // Shooting particle effect
-    pub bullet_fx: Emitter,
+    bullet_fx: Emitter,
 }
 
 impl Game {
-    /// Initializes a game struct.
+    /// Initializes the game.
     pub async fn init() -> Game {
+        set_pc_assets_folder("assets");
+        macroquad::rand::srand(macroquad::miniquad::date::now() as u64);
+        show_mouse(false); // Hide the mouse cursor
+
         let assets = Rc::new(asset_bundle::AssetBundle::load().await.unwrap()); // Load game assets
-        let level = level::Level::init(&assets);
+        let level = Level::init(&assets);
 
         // Shooting particle effect.
         let bullet_fx = Emitter::new(EmitterConfig {
@@ -86,34 +107,8 @@ impl Game {
         game
     }
 
-    /// Increments the score.
-    pub fn add_score(&mut self) {
-        let level_bonus = (SCORE_BASE / 10.0) * self.score[0];
-        let time_bonus = (SCORE_BASE + level_bonus) * (self.level.timer / LEVEL_TIME);
-        self.score[1] += SCORE_BASE + level_bonus + time_bonus;
-        self.score[0] += 1.0;
-
-        println!("Score: {:.0}, {:.0}", self.score[0], self.score[1]);
-    }
-
-    /// Draws a crosshair cursor at the mouse position.
-    pub fn draw_cursor(&mut self, width: f32, height: f32) {
-        let (mouse_x, mouse_y) = mouse_position();
-        // Draw the custom cursor at the mouse position
-        draw_texture_ex(
-            self.assets.crosshair,
-            mouse_x - width / 2.0,
-            mouse_y - height / 2.0,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(Vec2::new(width, height)),
-                ..Default::default()
-            },
-        );
-    }
-
-    /// Updates the game based on the game state.
-    pub async fn update(&mut self) {
+    /// Starts and updates the game based on the game state.
+    pub async fn run(&mut self) {
         draw_game_screen!(self, {
             match self.game_state {
                 Menu => {
@@ -122,6 +117,11 @@ impl Game {
                     if is_key_pressed(KeyCode::Enter) {
                         self.set_level();
                         play_sound_once(self.assets.menu_in_sound);
+                    } else if is_key_pressed(KeyCode::Escape) {
+                        play_sound_once(self.assets.pause_sound);
+                        set_sound_volume(self.assets.bg_music, 0.0);
+                        self.confirm_quit().await;
+                        set_sound_volume(self.assets.bg_music, 1.0);
                     }
                 }
 
@@ -166,12 +166,37 @@ impl Game {
         })
     }
 
+    /// Increments the score.
+    fn add_score(&mut self) {
+        let level_bonus = (SCORE_BASE / 10.0) * self.score[0];
+        let time_bonus = (SCORE_BASE + level_bonus) * (self.level.timer / LEVEL_TIME);
+        self.score[1] += SCORE_BASE + level_bonus + time_bonus;
+        self.score[0] += 1.0;
+
+        println!("Score: {:.0}, {:.0}", self.score[0], self.score[1]);
+    }
+
+    /// Draws a crosshair cursor at the mouse position.
+    fn draw_cursor(&mut self, width: f32, height: f32) {
+        let (mouse_x, mouse_y) = mouse_position();
+        draw_texture_ex(
+            self.assets.crosshair,
+            mouse_x - width / 2.0,
+            mouse_y - height / 2.0,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(Vec2::new(width, height)),
+                ..Default::default()
+            },
+        );
+    }
+
     /// Checks if the mouse clicked on a character.
     ///
     /// Returns `Some(true)` if the target character was clicked.
     /// Returns `Some(false)` if a non-target character was clicked.
     /// Returns `None` if no character was clicked.
-    pub fn check_target_click(&mut self) -> Option<bool> {
+    fn check_target_click(&mut self) -> Option<bool> {
         if is_mouse_button_pressed(MouseButton::Left) && self.level.timer_on {
             let (mouse_x, mouse_y) = self.renderer.mouse_position();
             println!("Mouse clicked at ({}, {})", mouse_x, mouse_y);
@@ -182,19 +207,14 @@ impl Game {
 
             // Check if mouse clicked on a character
             for character in self.level.crowd.iter_mut() {
-                if mouse_x >= character.x
+                if character.spawned
+                    && mouse_x >= character.x
                     && mouse_x <= character.x + CHAR_WIDTH
                     && mouse_y >= character.y + CLICK_OFFSET
                     && mouse_y <= character.y + CHAR_HEIGHT
-                    && character.spawned
                 {
                     character.dead = true;
-
-                    if character.is_target {
-                        return Some(true);
-                    } else {
-                        return Some(false);
-                    }
+                    return Some(character.is_target);
                 }
             }
         }
@@ -202,6 +222,7 @@ impl Game {
     }
 }
 
+// Macros
 #[macro_export]
 /// Macro to draw the game screen.
 macro_rules! draw_game_screen {
@@ -219,6 +240,7 @@ macro_rules! draw_game_screen {
         }
     };
 }
+pub(super) use draw_game_screen;
 
 #[macro_export]
 /// Macro to draw the game screen for `seconds` seconds.
@@ -236,3 +258,4 @@ macro_rules! draw_game_screen_for {
         })
     };
 }
+pub(super) use draw_game_screen_for;

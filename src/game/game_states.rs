@@ -1,10 +1,9 @@
-//! # Game States
+//! Game States
 //!
 //! Game states logic implementation.
 
-use crate::*;
-use macroquad::audio::*;
-use GameState::*;
+use super::{utils::text::*, *};
+use macroquad::rand::ChooseRandom;
 
 impl Game {
     /// Sets the game state to menu.
@@ -15,10 +14,10 @@ impl Game {
 
         // Load the highscore from storage if it exists
         let storage = &mut quad_storage::STORAGE.lock().unwrap();
-        if let [Some(highscore_level), Some(highscore_total)] = [
+        if let (Some(highscore_level), Some(highscore_total)) = (
             storage.get("highscore_level"),
             storage.get("highscore_total"),
-        ] {
+        ) {
             self.highscore = [
                 highscore_level.parse::<f32>().unwrap(),
                 highscore_total.parse::<f32>().unwrap(),
@@ -126,11 +125,12 @@ impl Game {
         }
     }
 
+    /// Transitions to either the next level or the game over screen.
     pub async fn transition_level(&mut self) {
         self.level.timer_on = false;
 
         if !self.game_over {
-            draw_game_screen_for!(self, 0.5, {
+            crate::draw_game_screen_for!(self, 0.5, {
                 self.level.draw(self.score);
                 self.bullet_fx.draw(self.renderer.mouse_position().into());
             });
@@ -143,8 +143,9 @@ impl Game {
             draw_game_screen_for!(self, 3.0, {
                 self.level.draw(self.score);
                 self.bullet_fx.draw(self.renderer.mouse_position().into());
-                self.level.blink_target();
+                self.level.get_target().blink();
             });
+            self.level.get_target().spawned = true; // Make sure the target is drawn after blinking
 
             self.set_game_over();
         }
@@ -254,5 +255,45 @@ impl Game {
             WHITE,
             1.5,
         );
+    }
+
+    /// Draws game quit confirmation screen and handles the input.
+    pub async fn confirm_quit(&mut self) {
+        next_frame().await;
+        draw_game_screen!(self, {
+            draw_text_centered(
+                "Are you sure you want to quit?",
+                GAME_WIDTH / 2.0,
+                GAME_HEIGHT / 2.0 - 50.0,
+                self.assets.font,
+                48,
+                WHITE,
+            );
+
+            draw_blinking_text(
+                "Press Enter to confirm",
+                GAME_WIDTH / 2.0,
+                GAME_HEIGHT / 2.0 + 50.0,
+                self.assets.font,
+                32,
+                WHITE,
+                1.5,
+            );
+            draw_blinking_text(
+                "Or Esc to cancel",
+                GAME_WIDTH / 2.0,
+                GAME_HEIGHT / 2.0 + 100.0,
+                self.assets.font,
+                32,
+                WHITE,
+                1.5,
+            );
+
+            if is_key_pressed(KeyCode::Enter) {
+                std::process::exit(0);
+            } else if is_key_pressed(KeyCode::Escape) {
+                break;
+            }
+        });
     }
 }

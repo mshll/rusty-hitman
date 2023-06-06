@@ -1,4 +1,4 @@
-//! # Utils
+//! Utils
 //!
 //! Small utilities for the game.
 

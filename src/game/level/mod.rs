@@ -1,10 +1,11 @@
-//! Level struct and methods
+//! Level module.
+//!
+//! Game level logic and implementation.
 
-use crate::asset_bundle::*;
-use crate::character::Character;
-use crate::*;
-use macroquad::audio::*;
-use std::rc::Rc;
+mod character;
+use super::*;
+use character::Character;
+use macroquad::rand::{gen_range, ChooseRandom};
 
 const BAR_BG_WIDTH: f32 = GROUND_WIDTH;
 const BAR_WIDTH: f32 = GROUND_WIDTH - 8.0;
@@ -193,7 +194,7 @@ impl Level {
     }
 
     /// Draws the ground.
-    pub fn draw_ground(&self) {
+    fn draw_ground(&self) {
         draw_texture_ex(
             self.assets.ground,
             GAME_WIDTH - GROUND_WIDTH - 50.0,
@@ -207,7 +208,7 @@ impl Level {
     }
 
     /// Draws the crowd.
-    pub fn draw_crowd(&mut self) {
+    fn draw_crowd(&mut self) {
         self.spawn_timer -= get_frame_time();
 
         // Spawn a new character every `SPAWN_DELAY` seconds
@@ -231,7 +232,7 @@ impl Level {
     }
 
     /// Draws the hints for the target character.
-    pub fn draw_hints(&self) {
+    fn draw_hints(&self) {
         let hints_text = ["Arms", "Body", "Face", "Hat", "Legs"];
         let (x, y) = (70.0, GAME_HEIGHT - GROUND_HEIGHT + 110.0);
         let size = 108.0;
@@ -352,7 +353,7 @@ impl Level {
     /// Updates and draws the level progress bar.
     ///
     /// Returns `true` if the timer is up. Returns `false` otherwise.
-    pub fn draw_progress_bar(&mut self) -> bool {
+    fn draw_progress_bar(&mut self) -> bool {
         let bar_color = if self.timer < (LEVEL_TIME / 3.0) {
             COLOR_RED
         } else if self.timer < (LEVEL_TIME / 3.0 * 2.0) {
@@ -401,7 +402,7 @@ impl Level {
 
     #[allow(unused)]
     /// Draws an outline around the target character.
-    pub fn draw_target_outline(&self) {
+    fn draw_target_outline(&self) {
         for character in self.crowd.iter() {
             if character.is_target {
                 draw_rectangle_lines(
@@ -416,17 +417,11 @@ impl Level {
         }
     }
 
-    /// Blink the target character.
-    pub fn blink_target(&mut self) {
-        for character in self.crowd.iter_mut() {
-            if character.is_target {
-                if get_time() % 0.5 < 0.25 {
-                    character.spawned = false;
-                } else {
-                    character.spawned = true;
-                }
-                break;
-            }
-        }
+    /// Finds the target character in the crowd and returns a mutable reference to it.
+    pub fn get_target(&mut self) -> &mut Character {
+        self.crowd
+            .iter_mut()
+            .find(|character| character.is_target)
+            .unwrap()
     }
 }

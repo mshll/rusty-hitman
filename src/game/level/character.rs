@@ -1,6 +1,6 @@
 //! Character struct that represents a character in the crowd.
 
-use crate::*;
+use super::*;
 use macroquad_particles::*;
 
 /// Character struct that represents a character in the crowd.
@@ -12,7 +12,7 @@ pub struct Character {
     pub color: Color,
     pub spawned: bool,
     pub dead: bool,
-    pub smoke_fx: Emitter,
+    smoke_fx: Emitter,
 }
 
 impl Character {
@@ -109,6 +109,15 @@ impl Character {
         if use_smoke {
             self.smoke_fx
                 .draw(vec2(self.x + CHAR_WIDTH / 2.0, self.y + CHAR_HEIGHT - 30.0));
+        }
+    }
+
+    /// Blinks the character on and off by setting `spawned` to true or false.
+    pub fn blink(&mut self) {
+        if get_time() % 0.5 < 0.25 {
+            self.spawned = false;
+        } else {
+            self.spawned = true;
         }
     }
 }
