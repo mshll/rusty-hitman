@@ -255,7 +255,7 @@ impl Level {
         // Draw objective text
         let text_size = measure_text("TEXT", Some(self.assets.font), 32, 1.0);
         draw_text_ex(
-            &format!("Your mission"),
+            "Your mission",
             x,
             y - 80.0,
             TextParams {
@@ -266,7 +266,7 @@ impl Level {
             },
         );
         draw_text_ex(
-            &format!("is to find"),
+            "is to find",
             x,
             y - 80.0 + text_size.height + 10.0,
             TextParams {
@@ -277,7 +277,7 @@ impl Level {
             },
         );
         draw_text_ex(
-            &format!("who has..."),
+            "who has...",
             x,
             y - 80.0 + (text_size.height + 10.0) * 2.0,
             TextParams {
@@ -296,7 +296,7 @@ impl Level {
                 2 => self.assets.char_face[self.target_traits[2]],
                 3 => self.assets.char_hat[self.target_traits[3]],
                 4 => self.assets.char_legs[self.target_traits[4]],
-                _ => panic!("Invalid trait index!"), // TODO: Remove and use Result instead?
+                _ => panic!("Should never happen. You broke the game!"),
             };
 
             // If the character has no hat, draw the empty texture instead.
