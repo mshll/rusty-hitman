@@ -172,8 +172,6 @@ impl Game {
         let time_bonus = (SCORE_BASE + level_bonus) * (self.level.timer / LEVEL_TIME);
         self.score[1] += SCORE_BASE + level_bonus + time_bonus;
         self.score[0] += 1.0;
-
-        println!("Score: {:.0}, {:.0}", self.score[0], self.score[1]);
     }
 
     /// Draws a crosshair cursor at the mouse position.
@@ -199,7 +197,6 @@ impl Game {
     fn check_target_click(&mut self) -> Option<bool> {
         if is_mouse_button_pressed(MouseButton::Left) && self.level.timer_on {
             let (mouse_x, mouse_y) = self.renderer.mouse_position();
-            println!("Mouse clicked at ({}, {})", mouse_x, mouse_y);
 
             // Trigger bullet particle effect
             self.bullet_fx.config.emitting = true;

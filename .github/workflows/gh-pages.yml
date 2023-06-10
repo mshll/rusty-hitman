@@ -11,17 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Add wasm32-unknown-unknown target
-        run: rustup target add wasm32-unknown-unknown
-
-      - name: Cargo build
-        run: cargo build --target wasm32-unknown-unknown --release
-
-      - name: Prepare artifact
-        run: cp target/wasm32-unknown-unknown/release/rusty-hitman.wasm public/
-
-      - name: Prepare assets
-        run: cp -R assets/ public/
+      - run: rustup target add wasm32-unknown-unknown
+      - run: cargo build --target wasm32-unknown-unknown --release
+      - run: mv .github/public/ public/
+      - run: cp target/wasm32-unknown-unknown/release/rusty-hitman.wasm public/
+      - run: cp -R assets/ public/
 
       - name: Publish current workdir to GitHub Pages
         uses: rayluo/github-pages-overwriter@v1.3

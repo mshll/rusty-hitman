@@ -38,24 +38,24 @@ impl AssetBundle {
     /// Loads all game assets.
     pub async fn load() -> Result<AssetBundle, FileError> {
         let mut assets = AssetBundle {
-            ground: load_texture("ground.png").await?,
-            crosshair: load_texture("crosshair.png").await?,
+            ground: load_texture("images/ground.png").await?,
+            crosshair: load_texture("images/crosshair.png").await?,
             char_arms: [Texture2D::empty(); ARMS_COUNT],
             char_body: [Texture2D::empty(); BODY_COUNT],
             char_face: [Texture2D::empty(); FACE_COUNT],
             char_hat: [Texture2D::empty(); HAT_COUNT],
             char_legs: [Texture2D::empty(); LEGS_COUNT],
-            logo: load_texture("logo.png").await?,
-            frame: load_texture("frame.png").await?,
-            frame_long: load_texture("frame-long.png").await?,
+            logo: load_texture("images/logo.png").await?,
+            frame: load_texture("images/frame.png").await?,
+            frame_long: load_texture("images/frame-long.png").await?,
             font: load_ttf_font("04B03.TTF").await.unwrap(),
             bar: [
-                load_texture("bar.png").await?,
-                load_texture("bar-bg.png").await?,
+                load_texture("images/bar.png").await?,
+                load_texture("images/bar-bg.png").await?,
             ],
-            skull: load_texture("skull.png").await?,
-            blood: load_texture("blood.png").await?,
-            empty: load_texture("empty.png").await?,
+            skull: load_texture("images/skull.png").await?,
+            blood: load_texture("images/blood.png").await?,
+            empty: load_texture("images/empty.png").await?,
             bg_music: load_sound("audio/puzzle_pieces.wav").await?,
             spawn_sound: load_sound("audio/spawn.wav").await?,
             shoot_sound: load_sound("audio/shoot.wav").await?,
@@ -80,30 +80,31 @@ impl AssetBundle {
         // Load character textures.
         for i in 0..ARMS_COUNT {
             assets.char_arms[i] =
-                load_texture(format!("character/arms-{}.png", i).as_str()).await?;
+                load_texture(format!("images/character/arms-{}.png", i).as_str()).await?;
             assets.char_arms[i].set_filter(FilterMode::Nearest);
         }
 
         for i in 0..BODY_COUNT {
             assets.char_body[i] =
-                load_texture(format!("character/body-{}.png", i).as_str()).await?;
+                load_texture(format!("images/character/body-{}.png", i).as_str()).await?;
             assets.char_body[i].set_filter(FilterMode::Nearest);
         }
 
         for i in 0..FACE_COUNT {
             assets.char_face[i] =
-                load_texture(format!("character/face-{}.png", i).as_str()).await?;
+                load_texture(format!("images/character/face-{}.png", i).as_str()).await?;
             assets.char_face[i].set_filter(FilterMode::Nearest);
         }
 
         for i in 0..HAT_COUNT {
-            assets.char_hat[i] = load_texture(format!("character/hat-{}.png", i).as_str()).await?;
+            assets.char_hat[i] =
+                load_texture(format!("images/character/hat-{}.png", i).as_str()).await?;
             assets.char_hat[i].set_filter(FilterMode::Nearest);
         }
 
         for i in 0..LEGS_COUNT {
             assets.char_legs[i] =
-                load_texture(format!("character/legs-{}.png", i).as_str()).await?;
+                load_texture(format!("images/character/legs-{}.png", i).as_str()).await?;
             assets.char_legs[i].set_filter(FilterMode::Nearest);
         }
 
