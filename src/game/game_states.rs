@@ -68,7 +68,7 @@ impl Game {
         }
 
         draw_blinking_text(
-            "Press Enter to start",
+            "Press Enter or click to start",
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 1.3,
             self.assets.font,
@@ -204,7 +204,7 @@ impl Game {
         }
 
         draw_blinking_text(
-            "Press Enter to restart",
+            "Press Enter or click to restart",
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 1.3,
             self.assets.font,
@@ -213,7 +213,7 @@ impl Game {
             1.5,
         );
         draw_blinking_text(
-            "Or Esc to quit",
+            "Press Esc to quit",
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 1.2,
             self.assets.font,
@@ -239,7 +239,7 @@ impl Game {
         );
 
         draw_blinking_text(
-            "Press Enter to resume",
+            "Press Enter or click to resume",
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 2.0 + 50.0,
             self.assets.font,
@@ -248,7 +248,7 @@ impl Game {
             1.5,
         );
         draw_blinking_text(
-            "Or Esc to quit",
+            "Press Esc to quit",
             GAME_WIDTH / 2.0,
             GAME_HEIGHT / 2.0 + 100.0,
             self.assets.font,
@@ -272,7 +272,7 @@ impl Game {
             );
 
             draw_blinking_text(
-                "Press Enter to confirm",
+                "Press Enter or click to confirm",
                 GAME_WIDTH / 2.0,
                 GAME_HEIGHT / 2.0 + 50.0,
                 self.assets.font,
@@ -281,7 +281,7 @@ impl Game {
                 1.5,
             );
             draw_blinking_text(
-                "Or Esc to cancel",
+                "Press Esc to cancel",
                 GAME_WIDTH / 2.0,
                 GAME_HEIGHT / 2.0 + 100.0,
                 self.assets.font,
@@ -290,7 +290,7 @@ impl Game {
                 1.5,
             );
 
-            if is_key_pressed(KeyCode::Enter) {
+            if is_key_pressed(KeyCode::Enter) || is_mouse_button_pressed(MouseButton::Left) {
                 std::process::exit(0);
             } else if is_key_pressed(KeyCode::Escape) {
                 break;

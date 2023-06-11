@@ -114,7 +114,8 @@ impl Game {
                 Menu => {
                     self.menu();
 
-                    if is_key_pressed(KeyCode::Enter) {
+                    if is_key_pressed(KeyCode::Enter) || is_mouse_button_pressed(MouseButton::Left)
+                    {
                         self.set_level();
                         play_sound_once(self.assets.menu_in_sound);
                     } else if is_key_pressed(KeyCode::Escape) {
@@ -138,7 +139,8 @@ impl Game {
                 GameOver => {
                     self.game_over();
 
-                    if is_key_pressed(KeyCode::Enter) {
+                    if is_key_pressed(KeyCode::Enter) || is_mouse_button_pressed(MouseButton::Left)
+                    {
                         self.score = [0.0, 0.0];
                         self.set_level();
                         play_sound_once(self.assets.menu_in_sound);
@@ -155,7 +157,9 @@ impl Game {
                     if is_key_pressed(KeyCode::Escape) {
                         self.set_menu();
                         play_sound_once(self.assets.menu_out_sound);
-                    } else if is_key_pressed(KeyCode::Enter) {
+                    } else if is_key_pressed(KeyCode::Enter)
+                        || is_mouse_button_pressed(MouseButton::Left)
+                    {
                         self.game_state = Playing;
                         self.level.timer_on = true;
                         play_sound_once(self.assets.menu_in_sound);
