@@ -164,6 +164,7 @@ impl Game {
         // Save the highscore to storage if it's higher than the current one (or if there isn't one yet)
         storage.set("highscore_level", &self.score[0].to_string());
         storage.set("highscore_total", &self.score[1].to_string());
+        self.highscore = self.score;
     }
 
     /// Draws the game over screen.
@@ -182,7 +183,7 @@ impl Game {
         );
 
         // Draw the highscore
-        if self.score[1] > self.highscore[1] && self.highscore[0] > 0.0 {
+        if self.score[1] >= self.highscore[1] && self.highscore[0] > 0.0 {
             draw_text_centered(
                 "- NEW HIGHSCORE! -",
                 GAME_WIDTH / 2.0,
