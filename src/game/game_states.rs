@@ -96,8 +96,13 @@ impl Game {
         let y_min = GAME_HEIGHT - GROUND_HEIGHT - 50.0;
         let y_max = GAME_HEIGHT - CHAR_HEIGHT - 70.0;
 
+        // First spawn delay, starts at 1.0s and slowly decreases to 0.1s as the player progresses
+        self.level.spawn_timer = 1.0 - (self.score[0] / 20.0);
+        if self.level.spawn_timer < 0.1 {
+            self.level.spawn_timer = 0.1;
+        }
+
         self.level.timer = LEVEL_TIME;
-        self.level.spawn_timer = 1.0; // Delay the first spawn by 1 second
         self.level.hints_color = rand_color();
         self.level.gen_crowd(num_chars, x_min, x_max, y_min, y_max);
         self.level.crowd.shuffle();
