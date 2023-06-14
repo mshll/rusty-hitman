@@ -15,7 +15,7 @@ Copyright © 2023 [Meshal Almutairi](mailto:meshal7@pdx.edu)
 Rusty Hitman is a 2D game written in Rust using macroquad. Your mission is to find your target, among a crowd, before the time runs out. You must use the provided description to identify and eliminate your target by pointing and clicking on them.
 
 - You have 10 seconds to identify and eliminate your target.
-- Only your target will have all the provided traits. Don't eliminate the wrong person!
+- Only your target will have all the provided traits. Don't shoot an innocent bystander!
 - Beat your high score by eliminating as many targets as you can.
 
 
@@ -29,6 +29,8 @@ Rusty Hitman is a 2D game written in Rust using macroquad. Your mission is to fi
 | ![Screenshot](assets/images/screenshots/ss4.png) | ![Screenshot](assets/images/screenshots/ss5.png) | ![Screenshot](assets/images/screenshots/ss6.png) |
 
 </details>
+
+For video presentation, see [PRESENTATION](PRESENTATION.mp4).
 
 
 ## Build and Run
@@ -63,7 +65,7 @@ Overall, I'm pretty happy with how the project turned out. I was able to impleme
 
 - Make the characters randomly wander around the level area.
 - Global leaderboard to track high scores.
-- Better visuals and animations.
+- Add more game modes (Hard, Practice, etc.).
 
 
 ## License
