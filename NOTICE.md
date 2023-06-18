@@ -1,3 +1,5 @@
+Game idea from [GMTK Jam 2019](https://itch.io/jam/gmtk-2019) game [Singled Out](https://crowbarska.itch.io/only-one).
+
 This project contains assets from the following sources:
 
 - [Creature Mixer](https://kenney.itch.io/creature-mixer) by [Kenney](https://kenney.nl/).
